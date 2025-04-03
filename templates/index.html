@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotted Zespol Szkol Technicznych</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Spotted Zespol Szkol Technicznych</h1>
+        <input id="messageInput" type="text" placeholder="Powiedz co chcesz, anonimowo">
+        
+        <div class="file-upload">
+            <label for="attachmentInput" class="file-upload-button">Wybierz plik</label>
+            <input id="attachmentInput" type="file" accept="image/*, .pdf" multiple>
+        </div>
+
+        <button id="sendButton" class="send-button">Wyslij</button>
+    </div>
+
+    <div class="links">
+        <a href="legal/prywatnosc.html">Polityka Prywatności</a>
+        <a href="#">Strona na Tor</a>
+    </div>
+
+    <div id="tosModal" class="modal">
+        <div class="modal-content">
+            <h2>Akceptacja Regulaminu</h2>
+            <p>Proszę zapoznać się z Regulaminem i Polityką Prywatności przed wysłaniem wiadomości.</p>
+            <div class="modal-footer">
+                <button id="acceptButton" class="modal-button">Akceptuję</button>
+                <button id="closeButton" class="modal-button">Anuluj</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
