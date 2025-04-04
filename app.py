@@ -6,12 +6,12 @@ app = Flask(__name__)
 
 # Ustawienie Limiter bez błędów w przekazywaniu key_func
 limiter = Limiter(get_remote_address, app=app)
-'''@app.before_request
+@app.before_request
 def before_request():
-    #if not request.is_secure and app.env != "development":
-        #url = request.url.replace("http://", "https://", 1)
-        #return redirect(url, code=301)
-    pass'''
+    '''if not request.is_secure:# and app.env != "development":
+        url = request.url.replace("http://", "https://", 1)
+        return redirect(url, code=301)'''
+    pass
 siteName = 'ZSTspotted'
 
 @app.route('/')
