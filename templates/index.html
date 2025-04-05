@@ -20,6 +20,11 @@
             margin: 0 auto;
         }
 
+        sub {
+            font-size: 0.8em;
+            color: #666;
+        }
+
         .post {
             margin-top: 30px;
             background-color: #fff;
@@ -31,6 +36,9 @@
             flex-direction: column;
             justify-content: space-between;
             height: 200px;
+            word-wrap: break-word;
+
+            font-size: calc(1.2rem - (100vw - 200px) / 1000 * 1.2rem);
         }
 
         .post h2 {
@@ -68,11 +76,9 @@
     <button class="add-post-button" onclick="window.location.href='/post'">Dodaj swoj post!</button>
     <div id="posts"></div>
     <script>
-        const posts = [
-            { title: 'Test post 1', content: 'This is a test post', author: 'John Doe', timestamp: 1598059581000 },
-            { title: 'Test post 2', content: 'This is another test post', author: 'Jane Doe', timestamp: 1598059582000 },
-            { title: 'Test post 3', content: 'And another one', author: 'Bob Doe', timestamp: 1598059583000 },
-        ];
+        let currentPage = 1;
+        let loading = false;
+        let allPostsLoaded = false;
 
         const formatTimestamp = timestamp => {
             const date = new Date(timestamp);
@@ -83,17 +89,52 @@
             return `${hours}:${minutes}:${seconds}`;
         };
 
-        posts.forEach(post => {
-            const el = document.createElement('div');
-            el.classList.add('post');
-            el.innerHTML = `
-                <h2>${post.title}</h2>
-                <p>${post.content}</p>
-                <p class="timestamp">Posted by ${post.author} at ${formatTimestamp(post.timestamp)}</p>
-            `;
-            document.getElementById('posts').appendChild(el);
-        });
+        const escapeHtml = str => {
+            const div = document.createElement('div');
+            div.innerText = str;
+            return div.innerHTML;
+        }
+
+        function fetchPosts() {
+            if (loading || allPostsLoaded) return;
+
+            loading = true;
+
+            fetch(`/posty?page=${currentPage}`)
+                .then(response => response.json())
+                .then(posts => {
+                    if (posts.length < 50) {
+                        allPostsLoaded = true;
+                    }
+
+                    posts.forEach(post => {
+                        const el = document.createElement('div');
+                        el.classList.add('post');
+                        el.innerHTML = `
+                            <sub># ${post.id}</sub>
+                            <p>${escapeHtml(post.content)}</p>
+                            <p class="timestamp">Dodano o ${formatTimestamp(post.timestamp)}</p>
+                        `;
+                        document.getElementById('posts').appendChild(el);
+                    });
+
+                    currentPage++;
+                    loading = false;
+                })
+                .catch(error => {
+                    console.error('Error fetching posts:', error);
+                    loading = false;
+                });
+        }
+
+        function checkScroll() {
+            if (!loading && !allPostsLoaded && (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100)) {
+                fetchPosts();
+            }
+        }
+
+        window.addEventListener("scroll", checkScroll);
+        fetchPosts();
     </script>
 </body>
 </html>
-
