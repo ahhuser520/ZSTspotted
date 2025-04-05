@@ -14,22 +14,18 @@
             <a href="/">
                 <button class="back-button">Powrót</button>
             </a>
-            <h1>Spotted Zespol Szkol Technicznych</h1>
+            <h1>Spotted Zespół Szkół Technicznych</h1>
+            <p style="float: left; padding: 0; margin: 0; margin-left: 2px;">Wyślij anonimową wiadomość: </p>
             <input
                 id="messageInput"
                 type="text"
-                placeholder="Powiedz co chcesz, anonimowo"
+                placeholder="Jak sie nazywa ten chłopak w blond włosach z 2a?"
             />
-
 
             <button id="sendButton" class="send-button">Wyslij</button>
         </div>
 
-        <div class="links">
-            <a href="/privacypolicy">Polityka Prywatności</a>
-            <a href="http://7ia7pk5wzcva6izkyqjdjsgnyge724byfbtf5fvegh3wh6bfnqjk25ad.onion">Strona na Tor</a>
-            <a href="/legal/tos">Regulamin</a>
-        </div>
+        {{ footer|safe }}
 
         <div id="tosModal" class="modal">
             <div class="modal-content">
@@ -52,4 +48,3 @@
         <script src="{{ url_for('static', filename='script.js') }}"></script>
     </body>
 </html>
-

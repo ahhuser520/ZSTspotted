@@ -85,7 +85,7 @@ body {
     cursor: pointer;
     width: auto;
     text-align: center;
-    margin: 20px auto 0;
+    margin: 10px auto 0;
 }
 
 .send-button:hover {
@@ -150,6 +150,22 @@ body {
     background-color: #0056b3;
 }
 
+.back-button {
+    position: fixed;
+    top: 10px;
+    left: 50px;
+    transform: translateX(-50%);
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #555555;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 30px;
+    z-index: 1;
+    float: left;
+}
+
 /* Mobile-specific styles */
 @media (max-width: 768px) {
     .container {
@@ -177,6 +193,21 @@ body {
 
     .modal-content {
         width: 80%;
+    }
+    .back-button {
+        position: fixed;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #ffffff;
+        color: #000000;
+        border: 1px solid #555555;
+        padding: 10px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        margin-bottom: 30px;
+        z-index: 1;
+        float: left;
     }
 }
 
@@ -219,5 +250,6 @@ body {
         cursor: pointer;
         margin-bottom: 30px;
         z-index: 1;
+        float: left;
     }
 }

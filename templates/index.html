@@ -1,140 +1,148 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotted Zespol Szkol Technicznych</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            padding: 20px;
-        }
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Spotted Zespol Szkol Technicznych</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f0f0f0;
+                padding: 20px;
+            }
 
-        #posts {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
+            #posts {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 20px;
+                padding: 20px;
+                max-width: 800px;
+                margin: 0 auto;
+            }
 
-        sub {
-            font-size: 0.8em;
-            color: #666;
-        }
+            sub {
+                font-size: 0.8em;
+                color: #666;
+            }
 
-        .post {
-            margin-top: 30px;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid #000;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 200px;
-            word-wrap: break-word;
+            .post {
+                margin-top: 30px;
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 10px;
+                border: 1px solid #000;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                height: 200px;
+                word-wrap: break-word;
 
-            font-size: calc(1.2rem - (100vw - 200px) / 1000 * 1.2rem);
-        }
+                font-size: calc(1.2rem - (100vw - 200px) / 1000 * 1.2rem);
+            }
 
-        .post h2 {
-            margin-top: 0;
-        }
+            .post h2 {
+                margin-top: 0;
+            }
 
-        .post p {
-            margin: 0;
-        }
+            .post p {
+                margin: 0;
+            }
 
-        .post .timestamp {
-            margin-top: 30px;
-            font-size: 0.8em;
-            color: #666;
-            margin-top: auto;
-        }
+            .post .timestamp {
+                margin-top: 30px;
+                font-size: 0.8em;
+                color: #666;
+                margin-top: auto;
+            }
 
-        .add-post-button {
-            position: fixed;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #ffffff;
-            color: #000000;
-            border: 1px solid #555555;
-            padding: 10px 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            margin-bottom: 30px;
-            z-index: 1;
-        }
-    </style>
-</head>
-<body>
-    <button class="add-post-button" onclick="window.location.href='/post'">Dodaj swoj post!</button>
-    <div id="posts"></div>
-    <script>
-        let currentPage = 1;
-        let loading = false;
-        let allPostsLoaded = false;
+            .add-post-button {
+                position: fixed;
+                top: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: #ffffff;
+                color: #000000;
+                border: 1px solid #555555;
+                padding: 10px 20px;
+                border-radius: 10px;
+                cursor: pointer;
+                margin-bottom: 30px;
+                z-index: 1;
+            }
+        </style>
+    </head>
+    <body>
+        <button class="add-post-button" onclick="window.location.href='/post'">
+            Dodaj swoj post!
+        </button>
+        <div id="posts"></div>
+        <script>
+            let currentPage = 1;
+            let loading = false;
+            let allPostsLoaded = false;
 
-        const formatTimestamp = timestamp => {
-            const date = new Date(timestamp);
-            const hours = `0${date.getHours()}`.slice(-2);
-            const minutes = `0${date.getMinutes()}`.slice(-2);
-            const seconds = `0${date.getSeconds()}`.slice(-2);
+            const formatTimestamp = (timestamp) => {
+                const date = new Date(timestamp);
+                const hours = `0${date.getHours()}`.slice(-2);
+                const minutes = `0${date.getMinutes()}`.slice(-2);
+                const seconds = `0${date.getSeconds()}`.slice(-2);
 
-            return `${hours}:${minutes}:${seconds}`;
-        };
+                return `${hours}:${minutes}:${seconds}`;
+            };
 
-        const escapeHtml = str => {
-            const div = document.createElement('div');
-            div.innerText = str;
-            return div.innerHTML;
-        }
+            const escapeHtml = (str) => {
+                const div = document.createElement("div");
+                div.innerText = str;
+                return div.innerHTML;
+            };
 
-        function fetchPosts() {
-            if (loading || allPostsLoaded) return;
+            function fetchPosts() {
+                if (loading || allPostsLoaded) return;
 
-            loading = true;
+                loading = true;
 
-            fetch(`/posty?page=${currentPage}`)
-                .then(response => response.json())
-                .then(posts => {
-                    if (posts.length < 50) {
-                        allPostsLoaded = true;
-                    }
+                fetch(`/posty?page=${currentPage}`)
+                    .then((response) => response.json())
+                    .then((posts) => {
+                        if (posts.length < 50) {
+                            allPostsLoaded = true;
+                        }
 
-                    posts.forEach(post => {
-                        const el = document.createElement('div');
-                        el.classList.add('post');
-                        el.innerHTML = `
+                        posts.forEach((post) => {
+                            const el = document.createElement("div");
+                            el.classList.add("post");
+                            el.innerHTML = `
                             <sub># ${post.id}</sub>
                             <p>${escapeHtml(post.content)}</p>
                             <p class="timestamp">Dodano o ${formatTimestamp(post.timestamp)}</p>
                         `;
-                        document.getElementById('posts').appendChild(el);
+                            document.getElementById("posts").appendChild(el);
+                        });
+
+                        currentPage++;
+                        loading = false;
+                    })
+                    .catch((error) => {
+                        console.error("Error fetching posts:", error);
+                        loading = false;
                     });
-
-                    currentPage++;
-                    loading = false;
-                })
-                .catch(error => {
-                    console.error('Error fetching posts:', error);
-                    loading = false;
-                });
-        }
-
-        function checkScroll() {
-            if (!loading && !allPostsLoaded && (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100)) {
-                fetchPosts();
             }
-        }
 
-        window.addEventListener("scroll", checkScroll);
-        fetchPosts();
-    </script>
-</body>
+            function checkScroll() {
+                if (
+                    !loading &&
+                    !allPostsLoaded &&
+                    window.innerHeight + window.scrollY >=
+                        document.body.offsetHeight - 100
+                ) {
+                    fetchPosts();
+                }
+            }
+
+            window.addEventListener("scroll", checkScroll);
+            fetchPosts();
+        </script>
+        {{ footer|safe }}
+    </body>
 </html>
