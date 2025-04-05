@@ -8,16 +8,17 @@
             body {
                 font-family: Arial, sans-serif;
                 background-color: #f0f0f0;
-                padding: 20px;
+                min-height: 100vh;
             }
 
             #posts {
                 display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
                 gap: 20px;
                 padding: 20px;
                 max-width: 800px;
                 margin: 0 auto;
+                margin-top: 0px;
             }
 
             sub {
@@ -26,19 +27,19 @@
             }
 
             .post {
-                margin-top: 30px;
+                margin-top: 0px;
                 background-color: #fff;
                 padding: 20px;
                 border-radius: 10px;
-                border: 1px solid #000;
+                border: 0.5px solid #000;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
-                height: 200px;
+                height: 350px;
                 word-wrap: break-word;
 
-                font-size: calc(1.2rem - (100vw - 200px) / 1000 * 1.2rem);
+                /*calc(1.2rem - (100vw - 200px) / 1000 * 1.2rem);*/
             }
 
             .post h2 {
@@ -47,6 +48,7 @@
 
             .post p {
                 margin: 0;
+                font-size: 120%;
             }
 
             .post .timestamp {
@@ -57,7 +59,8 @@
             }
 
             .add-post-button {
-                position: fixed;
+                position: sticky;
+                margin-top: 10px;
                 top: 10px;
                 left: 50%;
                 transform: translateX(-50%);
@@ -67,12 +70,29 @@
                 padding: 10px 20px;
                 border-radius: 10px;
                 cursor: pointer;
-                margin-bottom: 30px;
                 z-index: 1;
             }
+            header{
+                height: 45px;
+                background-color: rgb(231, 231, 231);
+                margin: 0;
+                padding: 0;
+                padding-top: 15px;
+                text-align: center;
+                color: rgb(79, 79, 79);
+            }
+            header h1{
+                font-size: 150%;
+            }
+            
         </style>
     </head>
-    <body>
+    <body style="padding: 0; margin: 0;">
+        <div class="content">
+
+        <header>
+            <h1 style="margin: 0; padding: 0;">Spotted szkoły browarowa</h1>
+        </header>
         <button class="add-post-button" onclick="window.location.href='/post'">
             Dodaj swoj post!
         </button>
@@ -143,6 +163,7 @@
             window.addEventListener("scroll", checkScroll);
             fetchPosts();
         </script>
-        {{ footer|safe }}
+                </div>
     </body>
+    {{ footer|safe }}
 </html>

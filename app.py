@@ -34,7 +34,6 @@ def post():
 def tos():
     return render_template('legal/tos.html', siteName=siteName, footer=g.footer)
 
-# Apply limit only to POST requests
 @limiter.limit('1 per hour')
 @app.route('/sendanonymousmessage', methods=['POST'])
 def sendanonymousmessage():

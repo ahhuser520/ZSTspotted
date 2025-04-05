@@ -22,13 +22,11 @@
             <input
                 id="messageInput"
                 type="text"
-                placeholder="Jak sie nazywa ten chłopak w blond włosach z 2a?"
+                placeholder="Jak się nazywa ten chłopak w blond włosach z 2a?"
             />
 
             <button id="sendButton" class="send-button">Wyslij</button>
         </div>
-
-        {{ footer|safe }}
 
         <div id="tosModal" class="modal">
             <div class="modal-content">
@@ -50,4 +48,11 @@
 
         <script src="{{ url_for('static', filename='script.js') }}"></script>
     </body>
+    {{ footer|safe }}
+    <style>
+        footer{
+            position: absolute !important;
+            bottom: 0 !important;
+        }
+    </style>
 </html>
