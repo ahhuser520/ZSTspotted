@@ -11,6 +11,9 @@
     </head>
     <body>
         <div class="container">
+            <a href="/">
+                <button class="back-button">Powrót</button>
+            </a>
             <h1>Spotted Zespol Szkol Technicznych</h1>
             <input
                 id="messageInput"
@@ -19,13 +22,13 @@
             />
 
 
-
             <button id="sendButton" class="send-button">Wyslij</button>
         </div>
 
         <div class="links">
             <a href="/privacypolicy">Polityka Prywatności</a>
-            <a href="#">Strona na Tor</a>
+            <a href="http://7ia7pk5wzcva6izkyqjdjsgnyge724byfbtf5fvegh3wh6bfnqjk25ad.onion">Strona na Tor</a>
+            <a href="/legal/tos">Regulamin</a>
         </div>
 
         <div id="tosModal" class="modal">
@@ -49,3 +52,4 @@
         <script src="{{ url_for('static', filename='script.js') }}"></script>
     </body>
 </html>
+
