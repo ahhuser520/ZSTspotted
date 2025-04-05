@@ -70,6 +70,7 @@ function sendMessage() {
         console.log('Message sent successfully:', data);
         messageInput.value = '';
         sendButton.style.display = 'none';
+        window.location.href = '/';
     })
     .catch(error => {
         console.error('Error sending message:', error);
