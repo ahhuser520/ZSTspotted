@@ -1,7 +1,6 @@
 from flask import Flask, render_template, redirect, request, abort, make_response
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-
 app = Flask(__name__)
 
 # Ustawienie Limiter bez błędów w przekazywaniu key_func
@@ -21,6 +20,12 @@ def index():
 @app.route('/privacypolicy')
 def privacypolicy():
     return render_template('legal/prywatnosc.html', siteName=siteName)
+@app.route('/post')
+def post():
+    return render_template('wyslij/index.html', siteName=siteName)
+@app.route('/tos')
+def tos():
+    return render_template('legal/tos.html', siteName=siteName)
 
 # Apply limit only to POST requests
 @limiter.limit('1 per hour')
@@ -33,4 +38,4 @@ def sendanonymousmessage():
     return response
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=400, debug=True)
+    app.run(host='0.0.0.0', port=4000, debug=True)

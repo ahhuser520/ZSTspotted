@@ -1,61 +1,99 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pl">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Spotted Zespol Szkol Technicznych</title>
-        <link
-            rel="stylesheet"
-            href="{{ url_for('static', filename='style.css') }}"
-        />
-    </head>
-    <body>
-        <div class="container">
-            <h1>Spotted Zespol Szkol Technicznych</h1>
-            <input
-                id="messageInput"
-                type="text"
-                placeholder="Powiedz co chcesz, anonimowo"
-            />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotted Zespol Szkol Technicznych</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
 
-            <div class="file-upload">
-                <label for="attachmentInput" class="file-upload-button"
-                    >Wybierz plik</label
-                >
-                <input
-                    id="attachmentInput"
-                    type="file"
-                    accept="image/*, .pdf"
-                    multiple
-                />
-            </div>
+        #posts {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
 
-            <button id="sendButton" class="send-button">Wyslij</button>
-        </div>
+        .post {
+            margin-top: 30px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 200px;
+        }
 
-        <div class="links">
-            <a href="/privacypolicy">Polityka Prywatności</a>
-            <a href="#">Strona na Tor</a>
-        </div>
+        .post h2 {
+            margin-top: 0;
+        }
 
-        <div id="tosModal" class="modal">
-            <div class="modal-content">
-                <h2>Akceptacja Regulaminu</h2>
-                <p>
-                    Proszę zapoznać się z Regulaminem i Polityką Prywatności
-                    przed wysłaniem wiadomości.
-                </p>
-                <div class="modal-footer">
-                    <button id="acceptButton" class="modal-button">
-                        Akceptuję
-                    </button>
-                    <button id="closeButton" class="modal-button">
-                        Anuluj
-                    </button>
-                </div>
-            </div>
-        </div>
+        .post p {
+            margin: 0;
+        }
 
-        <script src="{{ url_for('static', filename='script.js') }}"></script>
-    </body>
+        .post .timestamp {
+            margin-top: 30px;
+            font-size: 0.8em;
+            color: #666;
+            margin-top: auto;
+        }
+
+        .add-post-button {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ffffff;
+            color: #000000;
+            border: 1px solid #555555;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 30px;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <button class="add-post-button" onclick="window.location.href='/post'">Dodaj swoj post!</button>
+    <div id="posts"></div>
+    <script>
+        const posts = [
+            { title: 'Test post 1', content: 'This is a test post', author: 'John Doe', timestamp: 1598059581000 },
+            { title: 'Test post 2', content: 'This is another test post', author: 'Jane Doe', timestamp: 1598059582000 },
+            { title: 'Test post 3', content: 'And another one', author: 'Bob Doe', timestamp: 1598059583000 },
+        ];
+
+        const formatTimestamp = timestamp => {
+            const date = new Date(timestamp);
+            const hours = `0${date.getHours()}`.slice(-2);
+            const minutes = `0${date.getMinutes()}`.slice(-2);
+            const seconds = `0${date.getSeconds()}`.slice(-2);
+
+            return `${hours}:${minutes}:${seconds}`;
+        };
+
+        posts.forEach(post => {
+            const el = document.createElement('div');
+            el.classList.add('post');
+            el.innerHTML = `
+                <h2>${post.title}</h2>
+                <p>${post.content}</p>
+                <p class="timestamp">Posted by ${post.author} at ${formatTimestamp(post.timestamp)}</p>
+            `;
+            document.getElementById('posts').appendChild(el);
+        });
+    </script>
+</body>
 </html>
+
