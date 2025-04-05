@@ -88,11 +88,36 @@ body {
     margin: 20px auto 0;
 }
 
+
+.back-button {
+    position: fixed;
+    top: 10px;
+    left: 30px;
+    transform: translateX(-50%);
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #555555;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 30px;
+    z-index: 1;
+}
+
 .send-button:hover {
     background-color: #f1f1f1;
 }
 
 .links {
+    font-family: "Courier New", monospace;
+    position: absolute;
+    bottom: 20px;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+footer {
+
     font-family: "Courier New", monospace;
     position: absolute;
     bottom: 20px;
@@ -205,19 +230,5 @@ body {
 
     .modal-content {
         width: 75%;
-    }
-    .back-button {
-        position: fixed;
-        top: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: #ffffff;
-        color: #000000;
-        border: 1px solid #555555;
-        padding: 10px 20px;
-        border-radius: 10px;
-        cursor: pointer;
-        margin-bottom: 30px;
-        z-index: 1;
     }
 }
