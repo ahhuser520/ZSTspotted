@@ -106,6 +106,42 @@ def init_db():
     con.close()
 
 
+
+
+
+@app.route('/admin', methods=['GET', 'POST'])
+def admin():
+    con = sqlite.connect('database.db')
+    cur = con.cursor()
+
+    # If already logged in, show the admin panel
+    if session.get('admin_logged_in'):
+        return render_template('admin/panel.html', siteName=siteName)
+
+    # Handle GET request: Show login form
+    if request.method == 'GET':
+        return render_template('admin/login.html', siteName=siteName)
+
+    # Handle POST request: Validate passkey
+    if request.method == 'POST':
+        cur.execute("SELECT passkey FROM admin WHERE id = 1")
+        admin_row = cur.fetchone()
+
+        passkey = admin_row[0]
+        submitted_passkey = request.form.get('passkey')
+
+        # Check if the submitted passkey matches the stored passkey
+        if submitted_passkey and submitted_passkey == passkey:
+            # Correct passkey, set session to indicate logged-in status
+            session['admin_logged_in'] = True
+            return redirect('/admin')  # Use url_for to ensure correct URL routing
+        else:
+            # Incorrect passkey, render login form with an error message
+            return render_template('admin/login.html', incorrect=True, siteName=siteName)
+
+
+
+
 @app.route('/admin/postbyid', methods=['POST'])
 def postbyid():
     try:
