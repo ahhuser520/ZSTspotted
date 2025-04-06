@@ -24,6 +24,9 @@ body {
     position: relative;
 }
 
+
+
+
 .container h1 {
     font-size: 24px;
     margin-bottom: 20px;
@@ -109,33 +112,16 @@ body {
     background-color: #f1f1f1;
 }
 
-.links {
-    font-family: "Courier New", monospace;
-    position: absolute;
-    bottom: 20px;
-    display: flex;
-    justify-content: center;
-    width: 100%;
-}
+
 footer {
-
     font-family: "Courier New", monospace;
-    position: absolute;
-    bottom: 20px;
+    position: fixed;
+    bottom: 0;
     display: flex;
     justify-content: center;
     width: 100%;
 }
 
-.links a {
-    text-decoration: none;
-    color: #333;
-    margin: 0 15px;
-}
-
-.links a:hover {
-    color: #007BFF;
-}
 
 .modal {
     display: none;

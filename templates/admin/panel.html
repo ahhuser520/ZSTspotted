@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Remove Post</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            color: #333;
+        }
+
+        .container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 480px;
+            padding: 25px;
+            text-align: center;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+
+        .remove-post-container form input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 18px;
+            font-size: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+
+        .remove-post-container form input:focus {
+            outline: none;
+            border-color: #63b3ed;
+        }
+
+        .remove-post-container form button {
+            width: 100%;
+            padding: 12px;
+            font-size: 18px;
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .remove-post-container form button:hover {
+            background-color: #2b6cb0;
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .message.success {
+            color: #38a169;
+        }
+
+        .message.error {
+            color: #e53e3e;
+        }
+
+        .post-details {
+            margin-top: 20px;
+            text-align: left;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container remove-post-container">
+        <h1>Remove Post</h1>
+        <form id="remove-post-form">
+            <input type="number" name="id" id="post-id" placeholder="Post ID" required>
+            <button type="submit">Fetch Post</button>
+        </form>
+
+        <div class="post-details" id="post-details"></div>
+        <button id="remove-button" style="display:none;">Remove Post</button>
+
+        <div class="message" id="message"></div>
+    </div>
+
+    <script>
+document.getElementById('remove-post-form').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent the default form submission
+
+    const postId = document.getElementById('post-id').value;
+    const postDetailsElement = document.getElementById('post-details');
+    const messageElement = document.getElementById('message');
+    const removeButton = document.getElementById('remove-button');
+    messageElement.textContent = ''; // Clear previous message
+
+    // Fetch post details by post ID
+    fetch('/admin/postbyid', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: postId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data && data.id) {  // Check if the post exists by checking for 'id'
+            // Display post details
+            postDetailsElement.innerHTML = `
+                <strong>Post ID:</strong> ${data.id}<br>
+                <strong>Content:</strong> ${data.content}<br>
+                <strong>Timestamp:</strong> ${data.timestamp}<br>
+            `;
+            // Show the "Remove Post" button
+            removeButton.style.display = 'block';
+        } else {
+            messageElement.textContent = 'Post not found!';
+            messageElement.className = 'message error';
+        }
+    })
+    .catch(error => {
+        messageElement.textContent = 'Error fetching post details. Please try again.';
+        messageElement.className = 'message error';
+    });
+});
+
+        document.getElementById('remove-button').addEventListener('click', function() {
+            const postId = document.getElementById('post-id').value;
+            const messageElement = document.getElementById('message');
+
+            // Remove post after confirmation
+            fetch('/admin/usunpost', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id: postId }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    messageElement.textContent = 'Post successfully removed!';
+                    messageElement.className = 'message success';
+                    document.getElementById('post-id').value = ''; 
+                    document.getElementById('post-details').innerHTML = ''; // Clear post details
+                    document.getElementById('remove-button').style.display = 'none'; // Hide the button
+                } else {
+                    throw new Error('Something went wrong. Please try again.');
+                }
+            })
+            .catch(error => {
+                messageElement.textContent = error.message;
+                messageElement.className = 'message error';
+            });
+        });
+    </script>
+</body>
+</html>

@@ -101,15 +101,26 @@
             let currentPage = 1;
             let loading = false;
             let allPostsLoaded = false;
-
             const formatTimestamp = (timestamp) => {
-                const date = new Date(timestamp);
-                const hours = `0${date.getHours()}`.slice(-2);
-                const minutes = `0${date.getMinutes()}`.slice(-2);
-                const seconds = `0${date.getSeconds()}`.slice(-2);
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = (now.getTime() - date.getTime()) / 1000;
 
-                return `${hours}:${minutes}:${seconds}`;
-            };
+    // Adjust for local timezone offset in minutes
+    const timezoneOffset = now.getTimezoneOffset() * 60000;  // Convert minutes to milliseconds
+    const localDate = new Date(date.getTime() - timezoneOffset);  // Adjust timestamp to local time
+
+    if (diff < 60) {
+        return "przed chwil ";
+    } else if (diff < 3600) {
+        return `${Math.floor(diff / 60)} minut temu`;
+    } else if (diff < 86400) {
+        return `${Math.floor(diff / 3600)} godzin temu`;
+    } else {
+        return `${Math.floor(diff / 86400)} dni temu`;
+    }
+};
+
 
             const escapeHtml = (str) => {
                 const div = document.createElement("div");
@@ -135,7 +146,7 @@
                             el.innerHTML = `
                             <sub># ${post.id}</sub>
                             <p>${escapeHtml(post.content)}</p>
-                            <p class="timestamp">Dodano o ${formatTimestamp(post.timestamp)}</p>
+                            <p class="timestamp">Dodano ${formatTimestamp(post.timestamp)}</p>
                         `;
                             document.getElementById("posts").appendChild(el);
                         });
