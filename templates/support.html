@@ -8,6 +8,7 @@
             rel="stylesheet"
             href="{{ url_for('static', filename='style.css') }}"
         />
+        <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon" />
     </head>
     <body>
         <a href="/">
@@ -36,6 +37,8 @@
             <p id="errorMessage" class="errorMessage"></p>
 
             <button id="sendMessageToSupport" class="send-button" style="display: block">Wyslij</button>
+
+            <p>Mozesz równiez wysłać wiadomość bezpośrednio do: zstspotted@proton.me</p>
             <script>
                 document.getElementById("sendMessageToSupport").addEventListener('click', function(){
     let policyPrivacyAgreemenet = document.getElementById("policyPrivacyAgreemenet");
