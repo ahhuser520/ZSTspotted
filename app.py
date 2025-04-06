@@ -5,7 +5,6 @@ import sqlite3 as sqlite
 import random
 from dotenv import load_dotenv
 import os
-import hashlib
 from functools import wraps
 app = Flask(__name__)
 
@@ -28,7 +27,7 @@ def requires_admin(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not session.get('admin_logged_in'):
-            return redirect(url_for('admin'))  
+            return redirect(url_for('admin'))  # Redirect to login page if not logged in
         return f(*args, **kwargs)
     return decorated_function
 
@@ -37,6 +36,7 @@ def init_db():
     con = sqlite.connect('database.db')
     cur = con.cursor()
 
+    # Check if the 'admin' table exists; if not, create it
     cur.execute('''
         CREATE TABLE IF NOT EXISTS admin (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,69 +46,26 @@ def init_db():
 
     con.commit()
 
-    if not os.path.exists('passkey.txt'):
+    # Check if the passkey exists
+    cur.execute("SELECT passkey FROM admin WHERE id = 1")
+    admin_row = cur.fetchone()
+
+    if admin_row is None:
         random_passkey = ''.join(random.choices('0123456789abcdef', k=32))
-        
-        hashed_passkey = hashlib.sha256(random_passkey.encode()).hexdigest()
 
-        with open('passkey.txt', 'w') as f:
-            f.write(random_passkey)
-
-        cur.execute("INSERT INTO admin (passkey) VALUES (?)", (hashed_passkey,))
+        # Store the generated passkey in the database
+        cur.execute("INSERT INTO admin (passkey) VALUES (?)", (random_passkey,))
         con.commit()
 
+        # Print the passkey to the console for app restart
         print(f"Generated new passkey: {random_passkey}")
+
     else:
-        cur.execute("SELECT passkey FROM admin WHERE id = 1")
-        admin_row = cur.fetchone()
-        if admin_row:
-            print(f"Using existing passkey: {admin_row[0]}")
-        else:
-            print("Error: Admin passkey not found in the database.")
-    
-    con.close()
-
-
-def init_db():
-    db_exists = os.path.exists('database.db')
-
-    con = sqlite.connect('database.db')
-    cur = con.cursor()
-
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS admin (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            passkey TEXT NOT NULL
-        )
-    ''')
-
-    con.commit()
-
-    if os.path.exists('passkey.txt'):
-        with open('passkey.txt', 'r') as f:
-            random_passkey = f.read().strip()
-
-        hashed_passkey = hashlib.sha256(random_passkey.encode()).hexdigest()
-
-        if not db_exists:
-            cur.execute("INSERT INTO admin (passkey) VALUES (?)", (hashed_passkey,))
-            con.commit()
-    else:
-        random_passkey = ''.join(random.choices('0123456789abcdef', k=32))
-        hashed_passkey = hashlib.sha256(random_passkey.encode()).hexdigest()
-
-        with open('passkey.txt', 'w') as f:
-            f.write(random_passkey)
-
-        cur.execute("INSERT INTO admin (passkey) VALUES (?)", (hashed_passkey,))
-        con.commit()
+        print(f"Using existing passkey: {admin_row[0]}")
 
     con.close()
 
-
-
-
-
+# Admin login and panel route
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     con = sqlite.connect('database.db')
@@ -139,9 +96,7 @@ def admin():
             # Incorrect passkey, render login form with an error message
             return render_template('admin/login.html', incorrect=True, siteName=siteName)
 
-
-
-
+# Admin routes with session check
 @app.route('/admin/postbyid', methods=['POST'])
 def postbyid():
     try:
@@ -156,10 +111,11 @@ def postbyid():
         db.close()
 
         if post:
+            # Ensure correct mapping from the query result
             return jsonify({
-                "id": post[0],  
-                "timestamp": post[1], 
-                "content": post[2]  
+                "id": post[0],  # post[0] is the rowid (post ID)
+                "timestamp": post[1],  # post[1] is the timestamp
+                "content": post[2]  # post[2] is the content
             }), 200
         else:
             return jsonify({"error": "Post not found"}), 404
@@ -185,7 +141,7 @@ def usunpost():
                 content TEXT NOT NULL
             )
         ''')
-        db.execute("UPDATE posty SET content = 'Post usuniety' WHERE rowid = ?", (post_id,))
+        db.execute("UPDATE posty SET content = 'Post został usunięty, ze względu na naruszenie regulaminu.' WHERE rowid = ?", (post_id,))
         db.commit()
         db.close()
 
@@ -215,7 +171,7 @@ def tos():
 @app.route('/sendanonymousmessage', methods=['POST'])
 def sendanonymousmessage():
     jsonData = request.get_json()
-    if not jsonData or not jsonData.get('message'):  
+    if not jsonData or not jsonData.get('message'):  # Check if 'message' key exists
         abort(400)
 
     response = make_response('', 200)
@@ -263,4 +219,4 @@ def add_onion_location_header(response):
 
 if __name__ == '__main__':
     init_db()
-    app.run(host='0.0.0.0', port=4000, debug=True)
+    app.run(host='0.0.0.0', port=4200, debug=True)
