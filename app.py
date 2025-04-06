@@ -149,6 +149,27 @@ def usunpost():
 
     except sqlite.Error as e:
         return jsonify({"error": "Internal Server Error"}), 500
+    
+@app.route('/admin/wyswietlZgloszenie', methods=['POST'])
+@requires_admin
+def wyswietlZgloszenia():
+    try:
+        db = sqlite.connect('database.db')
+        zgloszenia = db.execute("SELECT * FROM support ORDER BY timestamp DESC")
+        db.close()
+
+        if zgloszenia:
+            return jsonify({
+                "id": zgloszenia[0],
+                "timestamp": zgloszenia[1],
+                "content": zgloszenia[2],
+                "email": zgloszenia[3]
+            }), 200
+        else:
+            return jsonify({"error": "Tickets not found"}), 404
+
+    except sqlite.Error as e:
+        return jsonify({"error": "Internal Server Error"}), 500
 
 # Public routes
 @app.route('/')

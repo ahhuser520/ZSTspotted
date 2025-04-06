@@ -3,26 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin panel</title>
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon" />
-    <title>Admin - Remove Post</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
+        body{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f3f4f6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             height: 100vh;
-            flex-direction: column;
             color: #333;
         }
-
         .container {
             background-color: #ffffff;
             border-radius: 15px;
@@ -32,7 +21,9 @@
             padding: 25px;
             text-align: center;
             overflow: hidden;
+            margin-top: 200px;
             transition: all 0.3s ease;
+            float: left;
         }
 
         .container:hover {
@@ -101,87 +92,101 @@
     </style>
 </head>
 <body>
-    <div class="container remove-post-container">
-        <h1>Remove Post</h1>
-        <form id="remove-post-form">
-            <input type="number" name="id" id="post-id" placeholder="Post ID" required>
-            <button type="submit">Fetch Post</button>
-        </form>
+    <div id="removePost">
+        <div class="container remove-post-container">
+            <h1>Remove Post</h1>
+            <form id="remove-post-form">
+                <input type="number" name="id" id="post-id" placeholder="Post ID" required>
+                <button type="submit">Fetch Post</button>
+            </form>
+    
+            <div class="post-details" id="post-details"></div>
+            <button id="remove-button" style="display:none;">Remove Post</button>
+    
+            <div class="message" id="message"></div>
+        </div>
 
-        <div class="post-details" id="post-details"></div>
-        <button id="remove-button" style="display:none;">Remove Post</button>
+        <div class="container remove-post-container" style="float: right; width: 60%;">
+            <h1>Zgłoszenia uzytkownikow</h1>
+            <div id="zgloszenia">
 
-        <div class="message" id="message"></div>
-    </div>
+            </div>
+            <script>
+                zgloszeniaDiv = document.getElementById("zgloszenia");
 
-    <script>
-document.getElementById('remove-post-form').addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevent the default form submission
-
-    const postId = document.getElementById('post-id').value;
-    const postDetailsElement = document.getElementById('post-details');
-    const messageElement = document.getElementById('message');
-    const removeButton = document.getElementById('remove-button');
-    messageElement.textContent = ''; // Clear previous message
-
-    // Fetch post details by post ID
-    fetch('/admin/postbyid', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id: postId }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data && data.id) {  // Check if the post exists by checking for 'id'
-            // Display post details
-            postDetailsElement.innerHTML = `
-                <strong>Post ID:</strong> ${data.id}<br>
-                <strong>Content:</strong> ${data.content}<br>
-                <strong>Timestamp:</strong> ${data.timestamp}<br>
-            `;
-            // Show the "Remove Post" button
-            removeButton.style.display = 'block';
-        } else {
-            messageElement.textContent = 'Post not found!';
-            messageElement.className = 'message error';
-        }
-    })
-    .catch(error => {
-        messageElement.textContent = 'Error fetching post details. Please try again.';
-        messageElement.className = 'message error';
-    });
-});
-
-        document.getElementById('remove-button').addEventListener('click', function() {
-            const postId = document.getElementById('post-id').value;
-            const messageElement = document.getElementById('message');
-
-            // Remove post after confirmation
-            fetch('/admin/usunpost', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ id: postId }),
-            })
-            .then(response => {
-                if (response.ok) {
-                    messageElement.textContent = 'Post successfully removed!';
-                    messageElement.className = 'message success';
-                    document.getElementById('post-id').value = ''; 
-                    document.getElementById('post-details').innerHTML = ''; // Clear post details
-                    document.getElementById('remove-button').style.display = 'none'; // Hide the button
-                } else {
-                    throw new Error('Something went wrong. Please try again.');
-                }
-            })
-            .catch(error => {
-                messageElement.textContent = error.message;
+            </script>
+        </div>
+        
+    
+        <script>
+    document.getElementById('remove-post-form').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent the default form submission
+    
+        const postId = document.getElementById('post-id').value;
+        const postDetailsElement = document.getElementById('post-details');
+        const messageElement = document.getElementById('message');
+        const removeButton = document.getElementById('remove-button');
+        messageElement.textContent = ''; // Clear previous message
+    
+        // Fetch post details by post ID
+        fetch('/admin/postbyid', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: postId }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.id) {  // Check if the post exists by checking for 'id'
+                // Display post details
+                postDetailsElement.innerHTML = `
+                    <strong>Post ID:</strong> ${data.id}<br>
+                    <strong>Content:</strong> ${data.content}<br>
+                    <strong>Timestamp:</strong> ${data.timestamp}<br>
+                `;
+                // Show the "Remove Post" button
+                removeButton.style.display = 'block';
+            } else {
+                messageElement.textContent = 'Post not found!';
                 messageElement.className = 'message error';
-            });
+            }
+        })
+        .catch(error => {
+            messageElement.textContent = 'Error fetching post details. Please try again.';
+            messageElement.className = 'message error';
         });
-    </script>
+    });
+    
+            document.getElementById('remove-button').addEventListener('click', function() {
+                const postId = document.getElementById('post-id').value;
+                const messageElement = document.getElementById('message');
+    
+                // Remove post after confirmation
+                fetch('/admin/usunpost', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ id: postId }),
+                })
+                .then(response => {
+                    if (response.ok) {
+                        messageElement.textContent = 'Post successfully removed!';
+                        messageElement.className = 'message success';
+                        document.getElementById('post-id').value = ''; 
+                        document.getElementById('post-details').innerHTML = ''; // Clear post details
+                        document.getElementById('remove-button').style.display = 'none'; // Hide the button
+                    } else {
+                        throw new Error('Something went wrong. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    messageElement.textContent = error.message;
+                    messageElement.className = 'message error';
+                });
+            });
+        </script>
+    </div>
 </body>
 </html>
