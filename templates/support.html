@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="pl">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Support - Zespol Szkol Technicznych</title>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='style.css') }}"
+        />
+    </head>
+    <body>
+        <a href="/">
+            <button class="back-button">&lt</button>
+        </a>
+        <div class="container">
+            <a href="/">
+                <button class="back-button">Powrót</button>
+            </a>
+            <h1>Support</h1>
+            <p style="float: left; padding: 0; margin: 0; margin-left: 2px;">Opisz problem*: </p>
+            <input
+                id="messageProblem"
+                type="text"
+                placeholder=""
+            />
+            <p style="float: left; padding: 0; margin: 0; margin-left: 2px;">Na jaki e-mail mamy wysłać odpowiedz: </p>
+            <input
+                id="messageEmail"
+                type="text"
+                placeholder=""
+            />
+            <table>
+                <tr><td><input type="checkbox" id="policyPrivacyAgreemenet"></td><td style="text-align: left;">Wyrazam zgodę na przetwarzanie moich danych osobowych zgodnie z <a href="/privacypolicy">polityką prywatności</a>*</td></tr>
+            </table>
+            <p id="errorMessage" class="errorMessage"></p>
+
+            <button id="sendMessageToSupport" class="send-button" style="display: block">Wyslij</button>
+            <script>
+                document.getElementById("sendMessageToSupport").addEventListener('click', function(){
+    let policyPrivacyAgreemenet = document.getElementById("policyPrivacyAgreemenet");
+    let messageProblem = document.getElementById("messageProblem");
+    let messageEmail = document.getElementById("messageEmail");
+    let isOkay = true;
+    let errorMessage = document.getElementById("errorMessage");
+    errorMessage.textContent = "";
+
+    if(!policyPrivacyAgreemenet.checked){
+        isOkay = false;
+        errorMessage.textContent = "Proszę wyrazić zgodę.";
+        return;
+    }
+
+    if(!messageProblem.value){
+        isOkay = false;
+        errorMessage.textContent = "Wiadomość nie może być pusta.";
+        return;
+    }
+
+    if(!messageEmail.value){
+        if(confirm("Pole z emailem jest puste. Nie będziemy w stanie zwrócić odpowiedzi. Czy na pewno chcesz kontynuować?")){
+            isOkay = true;
+        } else {
+            isOkay = false;
+            return;
+        }
+    }
+
+    if(isOkay){
+        // Prepare data to send
+        const data = {
+            contentMessage: messageProblem.value,
+            email: messageEmail.value || "",
+            policyPrivacyAggrement: String(policyPrivacyAgreemenet.checked)
+        };
+
+        // Send JSON POST request
+        fetch("http://127.0.0.1:4200/sendMessageToSupport", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error("Błąd serwera: " + response.status);
+            }
+        })
+        .then(data => {
+            // Handle server response
+            alert("Wiadomość została wysłana pomyślnie!");
+        })
+        .catch(error => {
+            errorMessage.textContent = "Wystąpił błąd podczas wysyłania wiadomości: " + error.message;
+        });
+    }
+});
+
+            </script>
+        </div>
+
+    </body>
+    {{ footer|safe }}
+    <style>
+        footer{
+            position: fixed !important;
+            bottom: 0 !important;
+        }
+    </style>
+</html>

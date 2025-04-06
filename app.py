@@ -159,6 +159,10 @@ def index():
 def privacypolicy():
     return render_template('legal/prywatnosc.html', siteName=siteName, footer=g.footer)
 
+@app.route('/support')
+def support():
+    return render_template('support.html', siteName=siteName, footer=g.footer)
+
 @app.route('/post')
 def post():
     return render_template('wyslij/index.html', siteName=siteName, footer=g.footer)
@@ -184,6 +188,44 @@ def sendanonymousmessage():
     ''')
     try:
         db.execute("INSERT INTO posty (content) VALUES (?)", (jsonData.get('message'),))
+        db.commit()
+        last_row_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
+        response.set_data(str(last_row_id))
+    except sqlite.Error as e:
+        response.status_code = 500
+        response.set_data(str(e))
+    finally:
+        db.close()
+
+    return response
+
+@limiter.limit('6 per hour')
+@app.route('/sendMessageToSupport', methods=['POST'])
+def sendMessageToSupport():
+    jsonData = request.get_json()
+    if not jsonData or not jsonData.get('contentMessage'):  # Check if 'message' key exists
+        abort(400)
+
+    if jsonData.get('contentMessage') == "":
+        abort(400)
+
+    if jsonData.get('policyPrivacyAggrement') == "false":
+        abort(400)
+    elif jsonData.get('policyPrivacyAggrement') != "true":
+        abort(400)
+
+    response = make_response('', 200)
+    db = sqlite.connect('database.db')
+    db.execute('''
+        CREATE TABLE IF NOT EXISTS support(
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            contentMessage TEXT NOT NULL,
+            email TEXT DEFAULT ""
+        )
+    ''')
+    try:
+        email = jsonData.get('email')
+        db.execute("INSERT INTO support (contentMessage, email) VALUES (?, ?)", (jsonData.get('contentMessage'), email))
         db.commit()
         last_row_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
         response.set_data(str(last_row_id))

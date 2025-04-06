@@ -11,7 +11,9 @@ body {
     min-height: 100vh;
     box-sizing: border-box;
 }
-
+.errorMessage{
+    color: lightcoral;
+}
 .container {
     text-align: center;
     background-color: white;

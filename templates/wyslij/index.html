@@ -22,8 +22,24 @@
             <input
                 id="messageInput"
                 type="text"
-                placeholder="Jak się nazywa ten chłopak w blond włosach z 2a?"
+                placeholder="JAVASCRIPT ERROR"
             />
+
+            <script>
+                function losujPlaceholder(){
+                    const strings = [
+                        "Jak się nazywa ten chłopak w blond włosach z 2a?",
+                        "Kto dziś spóźnił się na matematykę?",
+                        "Czy to prawda, że Ola z 3b kogoś ma?",
+                        "Dlaczego pan od fizyki dziś nie przyszedł?",
+                        "Kto pisał ściągi z historii?"
+                    ];
+
+                    const randomString = strings[Math.floor(Math.random() * strings.length)];
+                    document.getElementById("messageInput").setAttribute("placeholder", randomString);
+                }
+                window.onload = losujPlaceholder;
+            </script>
 
             <button id="sendButton" class="send-button">Wyslij</button>
         </div>
