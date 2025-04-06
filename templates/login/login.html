@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>Zaloguj się - Spotted zespół szkół technicznych</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon" />
+    <meta charset="UTF-8" />
+    <meta name="authour" content="anonymous" />
+    <meta name="description" content="The login system page of {{ name }} site. " />
+    <script type="module" src="{{ url_for('static', filename='authscript.js') }}"></script>
+    <meta name="keywords" content="self-hosted, e2ee, zero-knowledge architecture, encrypted email, mail, secure mail, decentralized messages, anonymous, free vpn, vpn, not selling data, data not collected, privacy, grapheneOS, secure software solutions, privacy protection tools, secure messaging platforms, Signal secure download, VPN software solutions, Google Pixel privacy adjustments, cybersecurity software, private messaging, encrypted communication tools, anonymous internet browsing, private internet access, digital security solutions, data encryption software, mobile privacy apps, open-source privacy tools, privacy-focused technologies, secure data storage, online anonymity tools, encrypted chat apps, private internet browsing, privacy-enhanced software development">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='auth.css') }}">
+    <!--<link rel="stylesheet" href="static/css/style.css" />-->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100&display=swap" rel="stylesheet">
+</head>
+<body>
+    <a href="/">
+        <button class="back-button">Powrót</button>
+    </a>
+    <main>
+        <div class="break"></div><br /><br /><br />
+        <div id="loginDiv">
+        <p id="loginTitle">Proszę zaloguj się,</p>
+        <p id="loginTitleSub">aby uzyskać mozliwość komentowania i like-owania.</p><br />
+        <center>
+        <table>
+            <tr>
+                <td><span class="loginText">Nazwa uzytkownika:</span></td>
+            </tr>
+            <tr>
+                <td><input class="loginInput" type="text" id="username" placeholder="myNickName123" /></td>
+            </tr>
+            <tr>
+                <td><span class="loginText">Hasło:</span></td>
+            </tr>
+            <tr>
+                <td><input class="loginInput" type="password" id="password" placeholder="myP@ssw0rd920" /></td>
+            </tr>
+        </table>
+        <button class="loginButton" id="loginBtnClick">Zaloguj się</button>
+        <div class="fontSize15px">Nie masz konta? <a class="loginLink" id="changeLoginAndRegister">Zajerestruj się tutaj</a>.</div>
+        <div class="errorMsg" id="errMsg1"></div>
+        </div>
+        <div id="registerDiv">
+        <!--<div id="break1" class="break"></div><br /><br />-->
+        <p id="loginTitle">Proszę zajerestruj się,</p>
+        <p id="loginTitleSub">aby uzyskać mozliwość komentowania i like-owania.</p><br />
+        <center>
+        <table>
+            <tr>
+                <td><span class="loginText">Nazwa uzytkownika*</span></td>
+            </tr>
+            <tr>
+                <td><input class="loginInput" type="text" id="usernameRegister1" placeholder="myNickName123" /></td>
+            </tr>
+            <tr>
+                <td><span class="loginText">Password*</span></td>
+            </tr>
+            <tr>
+                <td><input class="loginInput" type="password" id="passwordRegister1" placeholder="myP@ssw0rd920" /></td>
+            </tr>
+            <tr>
+                <td><span class="loginText">Re-enter password*</span></td>
+            </tr>
+            <tr>
+                <td><input class="loginInput" type="password" id="passwordRegister2" placeholder="myP@ssw0rd920" /></td>
+            </tr>
+            <tr>
+                <td><span class="loginText">Imię i nazwisko</span></td>
+            </tr>
+            <tr>
+                <td><input class="loginInput" type="text" id="personalData" placeholder="Adam Kowalski" /></td>
+            </tr>
+        </table>
+        <table style="width: 60%;">
+            <tr><td><input type="checkbox" id="policyPrivacyAgreemenet"></td><td style="text-align: left; font-size: 80%;">Wyrazam zgodę na przetwarzanie moich danych osobowych zgodnie z <a href="/privacypolicy">polityką prywatności</a>*</td></tr>
+        </table>
+        <button class="loginButton" id="registerBtnClick">Zajerestruj się</button>
+        <div class="fontSize15px">Masz juz konto? <a class="loginLink" id="changeLoginAndRegister2">Zaloguj się tutaj</a>.</div>
+        <p class="errorMsg" id="error2"></p>
+        </div>
+       
+    </center>
+        </div>
+    </main><br />
+    
+</body>
+<script>
+    document.getElementById("loginBtnClick").addEventListener('click', function() {
+      login();
+    });
+    document.getElementById("registerBtnClick").addEventListener('click', function() {
+      register();
+    });
+    document.getElementById("changeLoginAndRegister").addEventListener('click', function() {
+      changeLoginAndRegister();
+    });
+    document.getElementById("changeLoginAndRegister2").addEventListener('click', function() {
+      changeLoginAndRegister();
+    });
+</script>
+</html>

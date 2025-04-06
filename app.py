@@ -6,11 +6,19 @@ import random
 from dotenv import load_dotenv
 import os
 from functools import wraps
+import secrets
+from base64 import b64encode, b64decode
+import base64
+import string
+import time
+import jwt
+import json
 app = Flask(__name__)
 
 load_dotenv()
 
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
+app.config['SECRET_KEY'] = '2dca86e594a1b6890e47e16a6a5978b0f0a584118254f2e7fd086a277ad46958'
 
 # Ustawienie Limiter bez błędów w przekazywaniu key_func
 limiter = Limiter(get_remote_address, app=app)
@@ -150,6 +158,21 @@ def usunpost():
     except sqlite.Error as e:
         return jsonify({"error": "Internal Server Error"}), 500
     
+@app.route('/api/changePersonalData')
+def changePersonalData():
+    json = request.get_json()
+    username = json.get('username')
+    personalData = json.get('personalData')
+    token = json.get('token')
+    usernameFromToken = verify_token(token)
+    if usernameFromToken != username or usernameFromToken == "expired" or usernameFromToken == "invalid":
+        abort(401)
+    else:
+        db = sqlite.connect('database.db')
+        db.execute("UPDATE users SET personalData = '?' WHERE username = ?", (personalData, username,))
+        db.commit()
+        db.close()
+    
 @app.route('/admin/wyswietlZgloszenie', methods=['POST'])
 @requires_admin
 def wyswietlZgloszenia():
@@ -203,7 +226,7 @@ def sendanonymousmessage():
     db = sqlite.connect('database.db')
     db.execute('''
         CREATE TABLE IF NOT EXISTS posty(
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            timestamp DATETIME DEFAULT (datetime('now', 'localtime')),
             content TEXT NOT NULL
         )
     ''')
@@ -261,7 +284,7 @@ def sendMessageToSupport():
 @app.route('/posty')
 def posty():
     page = request.args.get('page', default=1, type=int)
-    postow_na_scroll = 50
+    postow_na_scroll = 20
 
     offset = (page - 1) * postow_na_scroll
 
@@ -280,6 +303,293 @@ def add_onion_location_header(response):
     response.headers["Onion-Location"] = "http://7ia7pk5wzcva6izkyqjdjsgnyge724byfbtf5fvegh3wh6bfnqjk25ad.onion"
     return response
 
+def generate_random_string(length=128):
+    characters = string.ascii_letters + string.digits + string.punctuation.replace('"', '').replace("'", '')
+    random_string = ''.join(random.choice(characters) for _ in range(length))
+    return random_string
+
+def generate_salt(length=16):
+    salt = secrets.token_bytes(length)
+    return base64.b64encode(salt).decode('utf-8')
+
+def generate_random_int():
+    return random.randint(100, 4500)
+
+# Function to delete token by token or id
+def delete_token(token="", id=""):
+    if token != "":
+        blacklist.add(token)
+        with open("blacklist.json", "w") as file:
+            json.dump(list(blacklist), file)
+        conn = sqlite.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM tokens WHERE token=?", (token,))
+        conn.commit()
+        conn.close()
+    elif id != "":
+        token = ""
+        conn = sqlite.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT token FROM tokens WHERE id=?", (id,))
+        # Device name is encrypted, unless it was server-generated
+        row = cursor.fetchone()
+        if row:
+            token = row[0]  # Access the token value
+        blacklist.add(token)
+        with open("blacklist.json", "w") as file:
+            json.dump(list(blacklist), file)
+        conn = sqlite.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM tokens WHERE token=?", (token,))
+        conn.commit()
+        conn.close()
+
+@app.route('/api/getSalt', methods=['POST'])
+@limiter.limit("3 per minute")
+def getSalt():
+    try:
+        salt = ""
+        response = {"salt": salt}
+        data = request.get_json()
+        username = data.get('username')
+        if type(username) == str and len(username) >= 64:
+            #if type(username)==str and len(username) > 3: #this line is for testing
+            db = sqlite.connect('database.db')
+            cursor = db.cursor()
+            cursor.execute("SELECT salt FROM users WHERE username=?", (username,))
+            row = cursor.fetchone()
+            if row:
+                salt = row[0]  # Accessing the salt value
+                response = {"salt": salt}
+                return jsonify(response), 200
+            else:
+                salt = generate_salt(16)  # user has not been found, but due to privacy reasons script has to return some kind of salt anyway
+                response = {"salt": salt}
+                return jsonify(response), 200
+        else:
+            print("app.py, getSalt(), InvalidDataError, type of username: "+str(type(username)))
+            abort(400)
+    except sqlite.Error as err:
+        print("app.py, getSalt(), SQLiteDataBaseConnectionError: "+str(err))
+        abort(500)
+    finally:
+        if cursor:
+            cursor.close()
+        if db:
+            db.close()
+
+
+@app.route('/api/register', methods=['POST'])
+@limiter.limit("3 per minute")
+def register():
+    try:
+        row = 0
+        token = ""
+        success = {"success": "no"}
+        try:
+            data = request.get_json()
+            username = str(data.get('username'))
+            password = str(data.get('password'))
+            personalData = str(data.get('personalData'))
+            agreement = str(data.get('policyPrivacyAgr', ""))
+            print("agrrement: ", agreement)
+            if agreement == "false" or agreement != "true":
+                abort(400)
+        except KeyError:
+            abort(400)
+
+        # Validate username and password
+        if (type(username) == str and type(password) == str and len(username) > 4 and len(password) > 4) and (len(username) <= 256 and len(password) <= 256):
+            salt = str(data.get('salt'))
+            if salt != "" and len(salt) == 16:
+                db = sqlite.connect('database.db')
+                cursor = db.cursor()
+                cursor.execute('''CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL UNIQUE,
+                    personalData TEXT DEFAULT NULL,
+                    password TEXT NOT NULL,
+                    salt TEXT NOT NULL)''')
+
+                cursor.execute("SELECT salt FROM users WHERE username=?", (username,))
+                row = cursor.fetchone()
+                if row:
+                    success = {"success": "no", "token": ""}
+                    return jsonify(success), 200
+                else:
+                    cursor.execute("INSERT INTO users (username, personalData, password, salt) VALUES (?, ?, ?, ?);", (username, personalData, password, salt))
+                    db.commit()
+                    token = generate_token(username)
+                    success = {"success": "yes", "token": str(token)}
+                    return jsonify(success), 201
+            else:
+                abort(400)
+        else:
+            abort(400)
+    except sqlite.Error as err:
+        print('app.py, register(), SQLiteDataBaseConnectionError: ', err)
+        abort(500)
+    finally:
+        if db:
+            db.close()
+
+@app.route('/api/login', methods=['POST'])
+@limiter.limit("3 per minute")
+def login():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid JSON body", "row": "0"}), 400
+    username = ""
+    password = ""
+    try:
+        username = str(data.get('username'))
+        password = str(data.get('password'))
+    except KeyError:
+        success = {"success": "dataerror", "token": ""}
+        return jsonify(success), 400
+
+    # Validate username and password lengths
+    if (type(username) == str) and (type(password) == str) and (len(username) > 4) and (len(password) > 6):
+        try:
+            token = ""
+            response = {"row": "0", "token": str(token)}
+            db = sqlite.connect('database.db')
+            cursor = db.cursor()
+            cursor.execute("SELECT id FROM users WHERE username=? AND password=?", (username, password))
+            rows = cursor.fetchall()
+
+            if len(rows) > 1:
+                abort(409, description="Duplicate records found.")
+
+            if len(rows) == 1:
+                deviceName = str(data.get('deviceName')) or ""
+                if len(deviceName) > 128:
+                    abort(400)
+                token = generate_token(username, deviceName)
+                db.commit()
+                response = {"row": "1", "token": str(token)}
+                return jsonify(response), 200
+            else:
+                abort(401)
+        except sqlite.Error as err:
+            abort(500)
+        finally:
+            if 'cursor' in locals() and cursor is not None:
+                cursor.close()
+            if 'db' in locals() and db is not None:
+                db.close()
+    else:
+        abort(400)
+
+# Function to verify the token
+def verify_token(token, max_age=3600*24*30):
+    try:
+        if token in blacklist:
+            print("token is in blacklist")
+            return 'invalid'
+
+        payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+
+        current_time = int(time.time())
+        if current_time - payload['timestamp'] > max_age:
+            delete_token(token)
+            return 'invalid'
+        
+        conn = sqlite.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT token FROM tokens WHERE token=?", (token,))
+        row = cursor.fetchone()
+        if not row:
+            print("brak tokenu")
+            return 'invalid'
+        return payload['username']
+    except jwt.ExpiredSignatureError:
+        return 'invalid'
+    except jwt.InvalidTokenError:
+        return 'invalid'
+
+# Function to check token validity
+def checkToken(token):
+    try:
+        verified_token = verify_token(token)
+        if isinstance(verified_token, str):
+            if verified_token == "invalid" or verified_token == "expired":
+                response = {"isTokenOkay": "False"}
+                return response
+            else:
+                response = {"isTokenOkay": "True"}
+                return response
+        else:
+            response = "dataError"
+            return response
+    except sqlite.Error as err:
+        response = "SQLiteDataBaseConnectionError"
+        return response
+
+
+def generate_token(username, deviceName = ""):
+    payload = {
+        'username': username,
+        'timestamp': int(time.time())
+    }
+
+    token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
+    if deviceName == "" or len(deviceName) > 128:
+        deviceName = generate_random_string(132)
+    db = sqlite.connect('database.db')
+    db.execute('''
+        CREATE TABLE IF NOT EXISTS tokens(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            deviceName DATETIME DEFAULT CURRENT_TIMESTAMP,
+            token TEXT NOT NULL,
+            username TEXT NOT NULL
+        )
+    ''')
+    db.execute("INSERT INTO tokens (deviceName, token, username) VALUES(?, ?, ?)", (deviceName, token, username))
+    db.commit()
+    db.close()
+    return token
+
+blacklist = set()
+
+try:
+    with open("blacklist.json", "r") as file:
+        blacklist = set(json.load(file))
+except FileNotFoundError:
+    blacklist = set()
+
+
+@app.route('/account')
+def account():
+    token = request.cookies.get('jwt_token')
+    if token:
+        #user has jwt_token cookie, but there is still chance that token is outdated
+        response = checkToken(token)
+        print(token)
+        if response != 'dataError' and response != 'SQLiteDataBaseConnectionError':
+            if response['isTokenOkay'] == "True":
+                isTokenValid = verify_token(token)
+                personalData = ""
+                if isTokenValid != "invalid" and isTokenValid != "expired":
+                    conn = sqlite.connect('database.db')
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT personalData FROM users WHERE username=?", (isTokenValid,)) #isTokenValid is username
+                    row = cursor.fetchone()
+                    if row:
+                        personalData = row[0]
+                else:
+                    abort(403)
+                return render_template('login/panel.html', siteName=siteName, footer=g.footer, personalData=personalData)
+            else:
+                return render_template('login/login.html', siteName=siteName, footer=g.footer)
+        else:
+            return render_template('login/login.html', siteName=siteName, footer=g.footer)
+    else:
+        print("User is not logged in")
+        return render_template('login/login.html', siteName=siteName, footer=g.footer)
+
+
+
 if __name__ == '__main__':
     init_db()
-    app.run(host='0.0.0.0', port=4200, debug=True)
+    app.run(host='0.0.0.0', port=4222, debug=True)

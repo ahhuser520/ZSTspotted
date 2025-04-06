@@ -7,7 +7,6 @@
         <link
             rel="stylesheet"
             href="{{ url_for('static', filename='style.css') }}"
-            
         />
         <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon" />
     </head>
@@ -42,8 +41,8 @@
                 }
                 window.onload = losujPlaceholder;
             </script>
-
             <button id="sendButton" class="send-button">Wyslij</button>
+            <p>Ten wpis <u>nie będzie</u> powiązany z twoim kontem.</p>
         </div>
 
         <div id="tosModal" class="modal">

@@ -86,7 +86,12 @@
             header h1{
                 font-size: 150%;
             }
-            
+            @media only screen and (max-width: 767px) {
+                header h1 {
+                    display: none;
+                }
+            }
+
         </style>
     </head>
     <body style="padding: 0; margin: 0;">
@@ -95,6 +100,27 @@
         <header>
             <img src="{{ url_for('static', filename='favicon.ico') }}" style="float: left; height: 60%; margin-left: 12px; margin-top: 12px;" />
             <h1 style="margin: 0; padding: 0; float: left; padding-top: 15px; margin-left: 10px">Spotted szkoły browarowa</h1>
+            <button id="zalogujSieBtn">Zaloguj się</button>
+            <script>
+                        function getSecureData(name) {
+    const data = localStorage.getItem(name);
+    return data;
+}
+                document.getElementById("zalogujSieBtn").textContent = getSecureData('username');
+            </script>
+            <style>
+                #zalogujSieBtn{
+                    padding: 5px;
+                    float: right;
+                    margin-right: 10px;
+                    margin-top: 15px;
+                }
+            </style>
+            <script>
+                document.getElementById("zalogujSieBtn").addEventListener('click', function(){
+                    window.location.href = "/account";
+                });
+            </script>
         </header>
         <button class="add-post-button" onclick="window.location.href='/post'">
             Dodaj swoj post!
@@ -105,16 +131,14 @@
             let loading = false;
             let allPostsLoaded = false;
             const formatTimestamp = (timestamp) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diff = (now.getTime() - date.getTime()) / 1000;
+                //return timestamp;
+    const date = new Date(timestamp);  // Create Date object from timestamp
+    const now = new Date();  // Get current date and time
+    const diff = (now.getTime() - date.getTime()) / 1000;  // Difference in seconds
 
-    // Adjust for local timezone offset in minutes
-    const timezoneOffset = now.getTimezoneOffset() * 60000;  // Convert minutes to milliseconds
-    const localDate = new Date(date.getTime() - timezoneOffset);  // Adjust timestamp to local time
-
+    // Time difference checks
     if (diff < 60) {
-        return "przed chwil ";
+        return "przed chwilą";
     } else if (diff < 3600) {
         return `${Math.floor(diff / 60)} minut temu`;
     } else if (diff < 86400) {
@@ -123,6 +147,7 @@
         return `${Math.floor(diff / 86400)} dni temu`;
     }
 };
+
 
 
             const escapeHtml = (str) => {

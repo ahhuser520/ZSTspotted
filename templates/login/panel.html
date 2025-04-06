@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pl-PL">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zarządzanie kontem - Spotted Zespół Szkół Technicznych</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon" />
+    <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='style.css') }}"
+            
+        />
+        <style>
+            #username{
+                text-align: center;
+                font-size: 110%;
+                margin-top: 20px;
+            } 
+            main {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgb(255, 255, 255);
+    box-shadow: 0px 0px 4px black;
+    border-radius: 10px;
+    padding: 10px;
+    width: 50%;
+    height: 76%;
+}
+            @media (max-width: 768px) {
+                #username{
+                    text-align: left;
+                    font-size: 100%;
+                    margin-top: 20px;
+                    margin-left: 10px;
+                }
+                main {
+                    width: 90%;
+                }
+            }
+main h3{
+    text-align: center;
+}
+
+        </style>
+</head>
+<body style="display: block;">
+    <a href="/">
+        <button class="back-button">Powrót</button>
+    </a>
+    <button id="logoutbtn" class="logoutbtn">Wyloguj się</button>
+    <script>
+        document.getElementById("logoutbtn").addEventListener('click', function(){
+        var cookies = document.cookie.split(";");
+
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i];
+            var equalsPos = cookie.indexOf("="); 
+            var cookieName = equalsPos > -1 ? cookie.substr(0, equalsPos) : cookie;
+            document.cookie = cookieName + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+        }
+
+        localStorage.clear();
+        window.location.href = "/account"
+    });
+    </script>
+    <p id="username">Witaj USERNAME</p>
+    <script type="module">
+        function getSecureData(name) {
+    const data = localStorage.getItem(name);
+    return data;
+}
+
+        document.getElementById("username").textContent = "Witaj, "+getSecureData('username');
+    </script>
+    <style>
+        .submitBtn{
+            background-color: rgb(83, 186, 255);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            border: 0;
+            box-shadow: 0 0 3px black;
+            cursor: pointer;
+            position: relative;
+            top: 67%;
+            left: 78%;
+        }
+        .submitBtn:hover{
+            background-color: rgb(38, 168, 255);
+        }
+        .submitBtn:active{
+            background-color: rgb(0, 119, 198);
+        }
+        input[type="text"]{
+            padding: 10px;
+            border-radius: 7px;
+            border: 0;
+            background-color: #f0f0f0;
+            width: 200px;
+        }
+
+        .submitBtn:disabled{
+            background-color: rgb(169, 169, 169);
+            color: white;
+            cursor: not-allowed;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+    <main>
+        <h3>Zarządzaj kontem</h3>
+        Imię i nazwisko:<br />
+        <input type="text" id="personalData" value="{{ personalData }}" placeholder="Adam Kowalski" />
+        <p style="padding: 0; margin: 0; font-size: 70%; color:rgba(0, 0, 0, 0.489); margin-left: 2px;"><b>Uwaga!</b> Imię i nazwisko są publiczne i widoczne m.in w komentarzach.</p>
+        <button id="updateBtn" class="submitBtn" disabled>Uaktualnij</button>
+        <script>
+            let personalDataValue = document.getElementById("personalData").value;
+            document.getElementById("personalData").addEventListener('input', function(){
+                if(document.getElementById("personalData").value != personalDataValue){
+                    document.getElementById("updateBtn").disabled = false;
+                }else{
+                    document.getElementById("updateBtn").disabled = true;
+                }
+            })
+            async function hash(data) {
+                console.log("utils.js, hash(), Hashing data: " + data);
+                const encoder = new TextEncoder();
+                const dataBuffer = encoder.encode(data);
+
+                const hashBuffer = await crypto.subtle.digest("SHA-512", dataBuffer);
+
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+
+                return hashHex;
+            }
+            /*document.getElementById("updateBtn").addEventListener('click', async function(){
+                let usernameHashed = await hash(username);
+                let newPersonalData = document.getElementById("personalData").value;
+
+                personalDataValue = newPersonalData;
+            });*/
+        </script>
+    </main>
+    {{ footer|safe }}
+</body>
+</html>

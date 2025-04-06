@@ -14,6 +14,20 @@ body {
 .errorMessage{
     color: lightcoral;
 }
+.logoutbtn{
+    background-color: lightcoral;
+    color: white;
+    border-radius: 8px;
+    border: 0;
+    padding: 10px;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+}
+.logoutbtn:hover{
+    cursor: pointer;
+    background-color: rgb(249, 113, 113);
+}
 .container {
     text-align: center;
     background-color: white;
