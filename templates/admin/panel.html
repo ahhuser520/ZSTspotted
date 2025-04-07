@@ -21,9 +21,9 @@
             padding: 25px;
             text-align: center;
             overflow: hidden;
-            margin-top: 200px;
             transition: all 0.3s ease;
             float: left;
+            margin: 10px;
         }
 
         .container:hover {
@@ -106,16 +106,77 @@
             <div class="message" id="message"></div>
         </div>
 
+        <div class="container remove-post-container">
+            <h1>Users list</h1>
+    
+            <div class="message" id="message"></div>
+        </div>
+
         <div class="container remove-post-container" style="float: right; width: 60%;">
             <h1>Zgłoszenia uzytkownikow</h1>
-            <div id="zgloszenia">
-
-            </div>
+            <div id="zgloszenia"></div>
             <script>
-                zgloszeniaDiv = document.getElementById("zgloszenia");
-
+                // Pobranie kontenera, w którym będą wyświetlane zgłoszenia
+                const zgloszeniaDiv = document.getElementById("zgloszenia");
+        
+                // Funkcja do pobrania i wyświetlenia zgłoszeń
+                async function fetchZgloszenia() {
+                    try {
+                        // Wysyłanie zapytania do serwera
+                        const response = await fetch('/admin/wyswietlZgloszenie', {
+                            method: 'POST',  // Używamy metody POST
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+        
+                        // Sprawdzenie, czy odpowiedź jest poprawna
+                        if (response.ok) {
+                            // Pobranie danych z odpowiedzi
+                            const data = await response.json();
+        
+                            // Jeżeli są zgłoszenia
+                            if (data.length > 0) {
+                                // Wyczyść div przed dodaniem nowych zgłoszeń
+                                zgloszeniaDiv.innerHTML = '';
+        
+                                // Iterowanie po wszystkich zgłoszeniach i tworzenie HTML
+                                data.forEach(zgloszenie => {
+                                    const zgloszenieDiv = document.createElement('div');
+                                    zgloszenieDiv.classList.add('zgloszenie-item'); // Klasa CSS, można dodać style
+        
+                                    // Tworzenie zawartości dla każdego zgłoszenia
+                                    zgloszenieDiv.innerHTML = `
+                                        <p><strong>ID:</strong> ${zgloszenie.id}</p>
+                                        <p><strong>Timestamp:</strong> ${zgloszenie.timestamp}</p>
+                                        <p><strong>Content:</strong> ${zgloszenie.content}</p>
+                                        <p><strong>Email:</strong> ${zgloszenie.email}</p>
+                                        <hr>
+                                    `;
+        
+                                    // Dodanie zgłoszenia do kontenera
+                                    zgloszeniaDiv.appendChild(zgloszenieDiv);
+                                });
+                            } else {
+                                // W przypadku, gdy nie ma żadnych zgłoszeń
+                                zgloszeniaDiv.innerHTML = '<p>Brak zgłoszeń do wyświetlenia.</p>';
+                            }
+                        } else {
+                            // Jeśli serwer zwróci błąd
+                            zgloszeniaDiv.innerHTML = '<p>Wystąpił problem z pobieraniem zgłoszeń.</p>';
+                        }
+                    } catch (error) {
+                        // Obsługa błędów
+                        zgloszeniaDiv.innerHTML = '<p>Wystąpił błąd podczas komunikacji z serwerem.</p>';
+                        console.error('Error fetching tickets:', error);
+                    }
+                }
+        
+                // Wywołanie funkcji po załadowaniu strony
+                window.onload = fetchZgloszenia;
             </script>
         </div>
+        
         
     
         <script>

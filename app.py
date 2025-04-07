@@ -18,8 +18,6 @@ app = Flask(__name__)
 
 load_dotenv()
 
-
-
 from flask import Flask
 from flask_cors import CORS
 
@@ -167,7 +165,7 @@ def usunpost():
         db = sqlite.connect('database.db')
         db.execute('''
             CREATE TABLE IF NOT EXISTS usuniete_posty(
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                timestamp DATETIME DEFAULT (datetime('now', 'localtime')),
                 content TEXT NOT NULL
             )
         ''')
@@ -202,20 +200,26 @@ def changePersonalData():
 def wyswietlZgloszenia():
     try:
         db = sqlite.connect('database.db')
-        zgloszenia = db.execute("SELECT * FROM support ORDER BY timestamp DESC")
+        zgloszenia = db.execute("SELECT * FROM support ORDER BY timestamp DESC").fetchall()  # Pobierz wszystkie zgłoszenia
         db.close()
 
         if zgloszenia:
-            return jsonify({
-                "id": zgloszenia[0],
-                "timestamp": zgloszenia[1],
-                "content": zgloszenia[2],
-                "email": zgloszenia[3]
-            }), 200
+            # Tworzymy listę słowników, gdzie każdy słownik odpowiada pojedynczemu zgłoszeniu
+            response = []
+            for zgloszenie in zgloszenia:
+                response.append({
+                    "id": zgloszenie[0],
+                    "timestamp": zgloszenie[1],
+                    "content": zgloszenie[2],
+                    "email": zgloszenie[3]
+                })
+            return jsonify(response), 200  # Zwracamy wszystkie zgłoszenia w formie JSON
+
         else:
             return jsonify({"error": "Tickets not found"}), 404
 
     except sqlite.Error as e:
+        print(e)
         return jsonify({"error": "Internal Server Error"}), 500
 
 # Public routes
@@ -286,7 +290,8 @@ def sendMessageToSupport():
     db = sqlite.connect('database.db')
     db.execute('''
         CREATE TABLE IF NOT EXISTS support(
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp DATETIME DEFAULT (datetime('now', 'localtime')),
             contentMessage TEXT NOT NULL,
             email TEXT DEFAULT ""
         )
@@ -331,7 +336,7 @@ def stworzKomentarz():
             postId INTEGER NOT NULL,
             content TEXT NOT NULL,
             creatorUsername TEXT NOT NULL,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            timestamp DATETIME DEFAULT (datetime('now', 'localtime'))
         )
     """)
 
@@ -399,9 +404,10 @@ def posty():
             postId INTEGER NOT NULL,
             content TEXT NOT NULL,
             creatorUsername TEXT NOT NULL,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            timestamp DATETIME DEFAULT (datetime('now', 'localtime'))
         )
     """)
+
 
     posts_raw = db.execute(
         "SELECT rowid, * FROM posty ORDER BY rowid DESC LIMIT ? OFFSET ?",
@@ -433,7 +439,7 @@ def posty():
                 display_name = user_data['personalData']
 
             # nadpisujemy display name
-            comment_dict['creatorUsername'] = display_name
+            comment_dict['personalData'] = display_name
             comments.append(comment_dict)
 
         posts.append({
@@ -741,4 +747,4 @@ def account():
 
 if __name__ == '__main__':
     init_db()
-    app.run(host='0.0.0.0', port=4333, debug=True)
+    app.run(host='0.0.0.0', port=809, debug=True)

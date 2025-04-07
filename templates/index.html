@@ -212,8 +212,11 @@
                             allPostsLoaded = true;
                         }
                         let i = 0;
-posts.forEach((post) => {
+posts.forEach(async (post) => {
+    let postDivBIG = document.createElement('div');
+    document.getElementById("posts").appendChild(postDivBIG);
     i = i + 1;
+    let tempI = i;
     const el = document.createElement("div");
     el.classList.add("post");
 
@@ -235,49 +238,47 @@ posts.forEach((post) => {
     commentsSection.style.width = "49%";
     commentsSection.style.height = "350px";
     commentsSection.style.float = "right";
-
-    // Input field
-    let html = `<input type='text' id='input${i}' placeholder='Napisz komentarz...' />`;
-
+    let html = `<input type='text' id='input${tempI}' placeholder='Napisz komentarz...' />`;
 // Comments list
 
 if (post.comments && post.comments.length > 0) {
     html += `<div class='comments-list' style='margin-top: 10px; max-height: 260px; overflow-y: auto;'>`;
-    post.comments.forEach(comment => {
+    // Zakładamy, że funkcja generująca HTML znajduje się w async kontekście
+const usernameHash = await hash(getSecureData('username'));
+
+for (const comment of post.comments) {
+    html += `
+        <div style='margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px;'>
+            <p style='margin: 0; font-size: 90%'>
+                <strong>${escapeHtml(comment.personalData || comment.creatorUsername)}</strong>: ${escapeHtml(comment.content)}
+            </p>
+            <p style='margin: 0; font-size: 70%; color: gray;'>${formatTimestamp(comment.timestamp)}</p>
+    `;
+
+    // Show delete button only for the author of the comment
+    if (comment.creatorUsername === usernameHash) {
         html += `
-            <div style='margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px;'>
-                <p style='margin: 0; font-size: 90%'>
-                    <strong>${escapeHtml(comment.creatorUsername)}</strong>: ${escapeHtml(comment.content)}
-                </p>
-                <p style='margin: 0; font-size: 70%; color: gray;'>${formatTimestamp(comment.timestamp)}</p>
+            <button onclick="usunKomentarz(${comment.id})" 
+                    style="font-size: 70%; color: red; background: none; border: none; cursor: pointer; padding: 0; margin-top: 5px;">
+                Usuń komentarz
+            </button>
         `;
+    }
 
-        // Show delete button only for the author of the comment
-        if (comment.creatorUsername === getSecureData('username')) {
-            html += `
-                <button onclick="usunKomentarz(${comment.id})" 
-                        style="font-size: 70%; color: red; background: none; border: none; cursor: pointer; padding: 0; margin-top: 5px;">
-                    Usuń komentarz
-                </button>
-            `;
-        }
+    html += `</div>`;
+}
 
-        html += `</div>`;
-    });
 
     html += `</div>`;
 } else {
     html += `<br /><br /><br /><br /><br /><br /><br /><br />
         <p style='text-align: center; font-size: 90%'>Bądź pierwszą osobą, która skomentuje ten post.</p>`;
 }
-
-
     commentsSection.innerHTML = html;
     el.appendChild(commentsSection);
-
-    document.getElementById("posts").appendChild(el);
+    postDivBIG.appendChild(el);
+    let inputElement = document.getElementById("input" + tempI);
     const username = getSecureData('username');
-const inputElement = document.getElementById("input" + i);
 if (!username || username === "null" || username.trim() === "") {
     console.log('disabled');
     inputElement.disabled = true;
