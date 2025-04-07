@@ -39,12 +39,6 @@ CORS(app, resources={
 def get_data():
     return {"message": "This is some data"}
 
-if __name__ == '__main__':
-    app.run()
-
-
-
-
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
 app.config['SECRET_KEY'] = '2dca86e594a1b6890e47e16a6a5978b0f0a584118254f2e7fd086a277ad46958'
 
@@ -177,7 +171,9 @@ def usunpost():
                 content TEXT NOT NULL
             )
         ''')
-        db.execute("UPDATE posty SET content = 'Post został usunięty, ze względu na naruszenie regulaminu.' WHERE rowid = ?", (post_id,))
+        #db.execute("UPDATE posty SET content = 'Post został usunięty, ze względu na naruszenie regulaminu.' WHERE rowid = ?", (post_id,))
+        db.execute("DELETE FROM posty WHERE rowid = ?", (post_id,))
+        db.execute("DELETE FROM komentarze WHERE postId = ?", (post_id,))
         db.commit()
         db.close()
 
@@ -350,6 +346,41 @@ def stworzKomentarz():
 
     return make_response('', 201)
 
+@app.route('/usunKomentarz', methods=['POST'])
+def usunKomentarz():
+    json = request.get_json()
+    komentarzId = json.get('komentarzId')
+    username = json.get('username')
+
+    token = request.cookies.get('jwt_token')
+    print(token)
+
+    tokenFromUsername = verify_token(token)
+
+    # Token is invalid if it doesn't match username or is expired/invalid
+    if tokenFromUsername != username or tokenFromUsername in ("invalid", "expired"):
+        abort(400)
+
+    db = sqlite.connect('database.db')
+    db.row_factory = sqlite.Row
+
+    # Check if the comment exists and belongs to the user
+    komentarz = db.execute(
+        'SELECT * FROM komentarze WHERE id = ? AND creatorUsername = ?',
+        (komentarzId, username)
+    ).fetchone()
+
+    if komentarz is None:
+        # Comment not found or does not belong to the user
+        db.close()
+        abort(404)
+
+    # Delete the comment
+    db.execute('DELETE FROM komentarze WHERE id = ?', (komentarzId,))
+    db.commit()
+    db.close()
+
+    return make_response('', 204)
 
 @app.route('/posty')
 def posty():
@@ -710,4 +741,4 @@ def account():
 
 if __name__ == '__main__':
     init_db()
-    app.run(host='0.0.0.0', port=4332, debug=True)
+    app.run(host='0.0.0.0', port=4333, debug=True)

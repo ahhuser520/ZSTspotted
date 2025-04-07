@@ -127,6 +127,38 @@
         </button>
         <div id="posts"></div>
         <script>
+            async function usunKomentarz(komentarzId) {
+    const username = getSecureData('username');
+
+    fetch('/usunKomentarz', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            komentarzId: komentarzId,
+            username: await hash(username)
+        }),
+        credentials: 'include' // Send cookies (JWT token)
+    })
+    .then(response => {
+        if (response.status === 204) {
+            // Successfully deleted
+            location.reload(); // Reload the page to update comments
+        } else if (response.status === 404) {
+            alert("Komentarz nie istnieje lub nie należy do Ciebie.");
+        } else if (response.status === 400) {
+            alert("Błąd autoryzacji. Zaloguj się ponownie.");
+        } else {
+            alert("Wystąpił nieoczekiwany błąd.");
+        }
+    })
+    .catch(error => {
+        console.error("Błąd podczas usuwania komentarza:", error);
+        alert("Błąd połączenia z serwerem.");
+    });
+}
+
             async function hash(data) {
     console.log("utils.js, hash(), Hashing data: " + data);
     const encoder = new TextEncoder();
@@ -207,25 +239,38 @@ posts.forEach((post) => {
     // Input field
     let html = `<input type='text' id='input${i}' placeholder='Napisz komentarz...' />`;
 
-    // Comments list
-    if (post.comments && post.comments.length > 0) {
-        html += `<div class='comments-list' style='margin-top: 10px; max-height: 260px; overflow-y: auto;'>`;
-            post.comments.forEach(comment => {
-    html += `
-        <div style='margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px;'>
-            <p style='margin: 0; font-size: 90%'>
-                <strong>${escapeHtml(comment.creatorUsername)}</strong>: ${escapeHtml(comment.content)}
-            </p>
-            <p style='margin: 0; font-size: 70%; color: gray;'>${formatTimestamp(comment.timestamp)}</p>
-        </div>
-    `;
-});
+// Comments list
+
+if (post.comments && post.comments.length > 0) {
+    html += `<div class='comments-list' style='margin-top: 10px; max-height: 260px; overflow-y: auto;'>`;
+    post.comments.forEach(comment => {
+        html += `
+            <div style='margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px;'>
+                <p style='margin: 0; font-size: 90%'>
+                    <strong>${escapeHtml(comment.creatorUsername)}</strong>: ${escapeHtml(comment.content)}
+                </p>
+                <p style='margin: 0; font-size: 70%; color: gray;'>${formatTimestamp(comment.timestamp)}</p>
+        `;
+
+        // Show delete button only for the author of the comment
+        if (comment.creatorUsername === getSecureData('username')) {
+            html += `
+                <button onclick="usunKomentarz(${comment.id})" 
+                        style="font-size: 70%; color: red; background: none; border: none; cursor: pointer; padding: 0; margin-top: 5px;">
+                    Usuń komentarz
+                </button>
+            `;
+        }
 
         html += `</div>`;
-    } else {
-        html += `<br /><br /><br /><br /><br /><br /><br /><br />
-            <p style='text-align: center; font-size: 90%'>Bądź pierwszą osobą, która skomentuje ten post.</p>`;
-    }
+    });
+
+    html += `</div>`;
+} else {
+    html += `<br /><br /><br /><br /><br /><br /><br /><br />
+        <p style='text-align: center; font-size: 90%'>Bądź pierwszą osobą, która skomentuje ten post.</p>`;
+}
+
 
     commentsSection.innerHTML = html;
     el.appendChild(commentsSection);
