@@ -251,6 +251,5 @@ function getSecureCookie(name) {
 }
 
 //const url = "http://51.77.48.176:4800/api/";
-//const url = "https://127.0.0.1:4800/api/";
-const url = "http://127.0.0.1:4222/api/"
+const url = "https://zstspotted.pl/api/";
 export { hash, encrypt, sendJsonRequest, decrypt, hashPassword, hashSHA256, url, setSecureCookie, getSecureCookie, setSecureData, getSecureData, generateRandomString };

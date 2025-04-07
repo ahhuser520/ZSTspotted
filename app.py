@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, request, abort, make_response, jsonify, session, g
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_cors import CORS
 import sqlite3 as sqlite
 import random
 from dotenv import load_dotenv
@@ -16,6 +17,33 @@ import json
 app = Flask(__name__)
 
 load_dotenv()
+
+
+
+from flask import Flask
+from flask_cors import CORS
+
+app = Flask(__name__)
+
+# Configure CORS for a specific domain and allow credentials
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["http://7ia7pk5wzcva6izkyqjdjsgnyge724byfbtf5fvegh3wh6bfnqjk25ad.onion", "https://zstspotted.pl"],  # Corrected: added a comma
+        "supports_credentials": True,  # Allow credentials (cookies, headers, etc.)
+        "methods": ["GET", "POST", "OPTIONS"],  # Allowed HTTP methods
+        "allow_headers": ["Content-Type", "Authorization"]  # Allowed headers
+    }
+})
+
+@app.route('/api/data')
+def get_data():
+    return {"message": "This is some data"}
+
+if __name__ == '__main__':
+    app.run()
+
+
+
 
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
 app.config['SECRET_KEY'] = '2dca86e594a1b6890e47e16a6a5978b0f0a584118254f2e7fd086a277ad46958'
@@ -326,7 +354,7 @@ def stworzKomentarz():
 @app.route('/posty')
 def posty():
     page = request.args.get('page', default=1, type=int)
-    postow_na_scroll = 20
+    postow_na_scroll = 50
 
     offset = (page - 1) * postow_na_scroll
 
@@ -682,4 +710,4 @@ def account():
 
 if __name__ == '__main__':
     init_db()
-    app.run(host='0.0.0.0', port=4222, debug=True)
+    app.run(host='0.0.0.0', port=4332, debug=True)
