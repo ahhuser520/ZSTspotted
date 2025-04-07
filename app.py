@@ -281,6 +281,48 @@ def sendMessageToSupport():
 
     return response
 
+@app.route('/stworzKomentarz', methods=['POST'])
+def stworzKomentarz():
+    json = request.get_json()
+    username = json.get('username')
+    wiadomosc = json.get('wiadomosc')
+    postId = json.get('postId')
+
+    token = request.cookies.get('jwt_token')
+    print(token)  # For debugging
+
+    tokenFromUsername = verify_token(token)
+
+    # Token is invalid if it doesn't match username or is expired/invalid
+    if tokenFromUsername != username or tokenFromUsername in ("invalid", "expired"):
+        abort(400)
+
+    db = sqlite.connect('database.db')
+    db.row_factory = sqlite.Row
+
+    # Create komentarze table if it doesn't exist
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS komentarze (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            postId INTEGER NOT NULL,
+            content TEXT NOT NULL,
+            creatorUsername TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    # Insert new comment
+    db.execute(
+        'INSERT INTO komentarze (postId, content, creatorUsername) VALUES (?, ?, ?)',
+        (postId, wiadomosc, username)
+    )
+
+    db.commit()
+    db.close()
+
+    return make_response('', 201)
+
+
 @app.route('/posty')
 def posty():
     page = request.args.get('page', default=1, type=int)
@@ -289,14 +331,62 @@ def posty():
     offset = (page - 1) * postow_na_scroll
 
     db = sqlite.connect('database.db')
+    db.row_factory = sqlite.Row  # This allows access to columns by name
 
-    posts = db.execute(
+    # Create komentarze table if it doesn't exist
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS komentarze (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            postId INTEGER NOT NULL,
+            content TEXT NOT NULL,
+            creatorUsername TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    posts_raw = db.execute(
         "SELECT rowid, * FROM posty ORDER BY rowid DESC LIMIT ? OFFSET ?",
         (postow_na_scroll, offset)
     ).fetchall()
 
+    posts = []
+    for post in posts_raw:
+        comments_raw = db.execute(
+            "SELECT * FROM komentarze WHERE postId = ? ORDER BY timestamp DESC",
+            (post['rowid'],)
+        ).fetchall()
+
+        comments = []
+        for comment in comments_raw:
+            comment_dict = dict(comment)
+            username = comment_dict['creatorUsername']
+            
+            # domyślnie: "Anonymous"
+            display_name = "Anonymous"
+
+            # próbujemy znaleźć dane personalne
+            user_data = db.execute(
+                "SELECT personalData FROM users WHERE username = ? AND personalData IS NOT NULL AND personalData != ''",
+                (username,)
+            ).fetchone()
+
+            if user_data:
+                display_name = user_data['personalData']
+
+            # nadpisujemy display name
+            comment_dict['creatorUsername'] = display_name
+            comments.append(comment_dict)
+
+        posts.append({
+            "id": post['rowid'],
+            "timestamp": post['timestamp'],
+            "content": post['content'],
+            "comments": comments
+        })
+
+    db.commit()
     db.close()
-    return jsonify([{"id": post[0], "timestamp": post[1], "content": post[2]} for post in posts])
+    return jsonify(posts)
 
 @app.after_request
 def add_onion_location_header(response):

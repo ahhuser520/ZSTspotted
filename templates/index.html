@@ -15,7 +15,7 @@
 
             #posts {
                 display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(700px, 1fr));
                 gap: 20px;
                 padding: 20px;
                 max-width: 800px;
@@ -36,9 +36,9 @@
                 border-radius: 10px;
                 border: 0.5px solid #000;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                display: flex;
+                /*display: flex;
                 flex-direction: column;
-                justify-content: space-between;
+                justify-content: space-between;*/
                 height: 350px;
                 word-wrap: break-word;
 
@@ -106,7 +106,7 @@
     const data = localStorage.getItem(name);
     return data;
 }
-                document.getElementById("zalogujSieBtn").textContent = getSecureData('username');
+                document.getElementById("zalogujSieBtn").textContent = getSecureData('username') || "Zaloguj się";
             </script>
             <style>
                 #zalogujSieBtn{
@@ -127,6 +127,18 @@
         </button>
         <div id="posts"></div>
         <script>
+            async function hash(data) {
+    console.log("utils.js, hash(), Hashing data: " + data);
+    const encoder = new TextEncoder();
+    const dataBuffer = encoder.encode(data);
+
+    const hashBuffer = await crypto.subtle.digest("SHA-512", dataBuffer);
+
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+
+    return hashHex;
+}
             let currentPage = 1;
             let loading = false;
             let allPostsLoaded = false;
@@ -167,18 +179,95 @@
                         if (posts.length < 50) {
                             allPostsLoaded = true;
                         }
+                        let i = 0;
+posts.forEach((post) => {
+    i = i + 1;
+    const el = document.createElement("div");
+    el.classList.add("post");
 
-                        posts.forEach((post) => {
-                            const el = document.createElement("div");
-                            el.classList.add("post");
-                            el.innerHTML = `
-                            <sub># ${post.id}</sub>
-                            <p>${escapeHtml(post.content)}</p>
-                            <p class="timestamp">Dodano ${formatTimestamp(post.timestamp)}</p>
-                        `;
-                            document.getElementById("posts").appendChild(el);
-                        });
+    // Left: Post content
+    const postDiv = document.createElement("div");
+    postDiv.style.width = "49%";
+    postDiv.style.height = "350px";
+    postDiv.style.float = "left";
+    postDiv.style.borderRight = "1px black solid";
+    postDiv.innerHTML = `
+        <sub># ${post.id}</sub>
+        <p>${escapeHtml(post.content)}</p>
+        <p class="timestamp">Dodano ${formatTimestamp(post.timestamp)}</p>
+    `;
+    el.appendChild(postDiv);
 
+    // Right: Comments
+    const commentsSection = document.createElement("div");
+    commentsSection.style.width = "49%";
+    commentsSection.style.height = "350px";
+    commentsSection.style.float = "right";
+
+    // Input field
+    let html = `<input type='text' id='input${i}' placeholder='Napisz komentarz...' />`;
+
+    // Comments list
+    if (post.comments && post.comments.length > 0) {
+        html += `<div class='comments-list' style='margin-top: 10px; max-height: 260px; overflow-y: auto;'>`;
+            post.comments.forEach(comment => {
+    html += `
+        <div style='margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px;'>
+            <p style='margin: 0; font-size: 90%'>
+                <strong>${escapeHtml(comment.creatorUsername)}</strong>: ${escapeHtml(comment.content)}
+            </p>
+            <p style='margin: 0; font-size: 70%; color: gray;'>${formatTimestamp(comment.timestamp)}</p>
+        </div>
+    `;
+});
+
+        html += `</div>`;
+    } else {
+        html += `<br /><br /><br /><br /><br /><br /><br /><br />
+            <p style='text-align: center; font-size: 90%'>Bądź pierwszą osobą, która skomentuje ten post.</p>`;
+    }
+
+    commentsSection.innerHTML = html;
+    el.appendChild(commentsSection);
+
+    document.getElementById("posts").appendChild(el);
+    const username = getSecureData('username');
+const inputElement = document.getElementById("input" + i);
+if (!username || username === "null" || username.trim() === "") {
+    console.log('disabled');
+    inputElement.disabled = true;
+    inputElement.setAttribute("placeholder", "Aby móc pisać komentarze, musisz się zalogować.");
+} else {
+    // Add Enter key listener to submit comment
+    inputElement.addEventListener("keypress", async function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            const message = inputElement.value.trim();
+            if (message === "") return;
+
+            fetch("/stworzKomentarz", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    username: await hash(username),
+                    wiadomosc: message,
+                    postId: post.id
+                })
+            }).then(response => {
+                if (response.status === 201) {
+                    location.reload(); // Reload to show new comment
+                } else {
+                    alert("Błąd przy dodawaniu komentarza.");
+                }
+            }).catch(error => {
+                console.error("Błąd żądania:", error);
+            });
+        }
+    });
+}
+});
                         currentPage++;
                         loading = false;
                     })
@@ -202,6 +291,15 @@
             window.addEventListener("scroll", checkScroll);
             fetchPosts();
         </script>
+        <style>
+            input[type='text']{
+                padding: 10px;
+                border-radius: 8px;
+                border: 0;
+                width: 95%;
+                background-color: #ececec;
+            }
+        </style>
                 </div>
     </body>
     {{ footer|safe }}
