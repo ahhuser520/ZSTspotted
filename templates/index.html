@@ -73,10 +73,11 @@ header img {
     display: flex;
     flex-direction: row; /* Allows post and comments to be side by side */
     /* justify-content: space-between; */
+    transform: translateY(-1px);
 }
 
 .post:hover {
-    transform: translateY(-3px);
+    transform: translateY(-5px);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -97,9 +98,8 @@ header img {
     margin-top: auto;
 }
 
-/* Comments Section */
 .comments {
-    width: 250px; /* Set width for the comments section */
+    width: 250px;
     margin-left: 20px;
     background-color: #f9f9f9;
     padding: 10px;
@@ -170,14 +170,14 @@ header img {
         flex-direction: column; /* Stack post content and comments vertically */
     }
 
-    .comments {
-        width: 100%; /* Full width for comments on mobile */
+    /*.comments {
+        width: 250px; Full width for comments on mobile
         margin-left: 0;
         padding: 10px;
         background-color: #ffffff;
         box-shadow: none;
         margin-top: 15px;
-    }
+    }*/
 
     .add-post-button {
         bottom: 150px;
@@ -358,7 +358,7 @@ posts.forEach(async (post) => {
     commentsSection.style.width = "49%";
     commentsSection.style.height = "350px";
     commentsSection.style.float = "right";
-    commentsSection.style.position = "flex"; 
+    commentsSection.style.position = "flex";
     let html = `<input type='text' id='input${tempI}' placeholder='Napisz komentarz...' />`;
     if (window.innerWidth < 768) {
         postDiv.style.width = "49%";
@@ -517,15 +517,15 @@ svgButton.addEventListener('click', function(){
                 background-color: #ececec;
             }
             .svgButtonAddComment {
-    width: 10%;
-    border: 0;    background-color: #f0f0f000;
-    position: absolute;
-    padding-top: 8px;
-    padding-left: 7px;
-    cursor: pointer;
-    top: 0;
-    right: 0;
-}
+                width: 6%;
+                border: 0;    background-color: #f0f0f000;
+                position: absolute;
+                padding-top: 8px;
+                padding-left: 7px;
+                cursor: pointer;
+                top: 12px;
+                right: 11px;
+            }
 
         </style>
                 </div>
