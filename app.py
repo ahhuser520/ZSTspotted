@@ -247,7 +247,7 @@ def tos():
 @app.route('/sendanonymousmessage', methods=['POST'])
 def sendanonymousmessage():
     jsonData = request.get_json()
-    if not jsonData or not jsonData.get('message'):  # Check if 'message' key exists
+    if not jsonData or not jsonData.get('message') or len(jsonData.get('message')) == 0:  # Check if 'message' key exists
         abort(400)
 
     response = make_response('', 200)
@@ -743,7 +743,7 @@ def account():
         print("User is not logged in")
         return render_template('login/login.html', siteName=siteName, footer=g.footer)
 
-
+init_db()
 
 if __name__ == '__main__':
     init_db()

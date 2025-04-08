@@ -166,6 +166,11 @@ async function register(){
       errorMsg = "Hasła nie są takie same.";
       isOkay = false;
   }
+  if(passwordRegister1.value.length < 8){
+    console.log("authScript.js, register(), passwords inputs are too short.");
+      errorMsg = "Hasła są za krótkie.";
+      isOkay = false;
+  }
   if(!policyPrivacyAgreemenet.checked){
     errorMsg = "Musisz zaakceptować politykę prywatności.";
     isOkay = false;
@@ -228,22 +233,17 @@ async function register(){
   }     
 }
 let isLoginDivVisible = false;
-function changeLoginAndRegister(){
-  let loginDiv = document.getElementById("loginDiv");
-  let registerDiv = document.getElementById("registerDiv");
-  isLoginDivVisible = !isLoginDivVisible;
-  if(isLoginDivVisible){
-      loginDiv.style.visibility = "hidden";
-      loginDiv.style.height = "0px";
-      registerDiv.style.height = "500px";
-      registerDiv.style.visibility = "visible";
-      //showOrHidePasswordBtn.style.visibility = "hidden";
-  }else{
-      loginDiv.style.visibility = "visible";
-      loginDiv.style.height = "500px";
-      registerDiv.style.height = "0px";
-      registerDiv.style.visibility = "hidden";
-      //showOrHidePasswordBtn.style.visibility = "visible";
+function changeLoginAndRegister() {
+  const login = document.getElementById("loginDiv");
+  const register = document.getElementById("registerDiv");
+
+  // Toggle visibility of login and register forms
+  if (login.style.display === "none") {
+      login.style.display = "block"; // Show login
+      register.style.display = "none"; // Hide register
+  } else {
+      login.style.display = "none"; // Hide login
+      register.style.display = "block"; // Show register
   }
 }
 
