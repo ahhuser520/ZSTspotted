@@ -55,9 +55,10 @@ header img {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(700px, 1fr));
     gap: 20px;
-    padding: 80px 20px 20px;
+    padding: 15px 20px 20px;
     max-width: 800px;
     margin: 0 auto;
+    margin-bottom: 50px;
 }
 
 /* Post Card */
@@ -126,22 +127,22 @@ header img {
 }
 
 .add-post-button {
-                position: sticky;
-                margin-top: 10px;
-                top: 10px;
-                left: 50%;
-                transform: translateX(-50%);
-                background-color: #ffffff;
-                color: #000000;
-                border: 1px solid #555555;
-                padding: 10px 20px;
-                border-radius: 10px;
-                cursor: pointer;
-                z-index: 1;
-            }
+    position: sticky;
+    margin-top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: block;
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #555555;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    z-index: 1;
+}
 
 .add-post-button:hover {
-    background: #0056b3;
+    background: #eaf4ff;
 }
 
 /* Responsive Design for Mobile */
@@ -179,7 +180,8 @@ header img {
     }
 
     .add-post-button {
-        bottom: 15px;
+        bottom: 150px;
+        display: block;
         right: 15px;
         font-size: 14px;
         padding: 10px 16px;
@@ -192,8 +194,8 @@ header img {
         <div class="content">
 
         <header>
-            <img src="{{ url_for('static', filename='favicon.ico') }}" style="float: left; height: 60%; margin-left: 12px; margin-top: 12px;" />
-            <h1 style="margin: 0; padding: 0; float: left; padding-top: 15px; margin-left: 10px">Spotted szkoły browarowa</h1>
+            <img src="{{ url_for('static', filename='favicon.ico') }}" style="float: left; height: 60%; margin-left: 0px; margin-top: 4px;" />
+            <h1 style="margin: 0; padding: 0; float: left; padding-top: 0px; margin-left: 10px">Spotted szkoły browarowa</h1>
             <button id="zalogujSieBtn">Zaloguj się</button>
             <script>
                         function getSecureData(name) {
@@ -206,8 +208,7 @@ header img {
                 #zalogujSieBtn{
                     padding: 5px;
                     float: right;
-                    margin-right: 10px;
-                    margin-top: 15px;
+                    margin-right: 30px;
                 }
             </style>
             <script>
