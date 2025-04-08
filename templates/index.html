@@ -133,6 +133,24 @@
         </button>
         <div id="posts"></div>
         <script>
+            async function usunDane(){
+                var cookies = document.cookie.split(";");
+
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i];
+            var equalsPos = cookie.indexOf("="); 
+            var cookieName = equalsPos > -1 ? cookie.substr(0, equalsPos) : cookie;
+            document.cookie = cookieName + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+        }
+
+        localStorage.clear();
+        window.location.href = "/account"
+            }
+        async function zweryfikujToken(){
+            
+        }
+        zweryfikujToken();
+
             async function usunKomentarz(komentarzId) {
     const username = getSecureData('username');
 
@@ -338,12 +356,13 @@ async function wyslij(){
                 username: await hash(username),
                 wiadomosc: message,
                 postId: post.id
-            })
+            }),
+            credentials: 'include'
         }).then(response => {
             if (response.status === 201) {
                 location.reload(); // Reload to show new comment
             } else {
-                alert("Błąd przy dodawaniu komentarza.");
+                alert("Błąd przy dodawaniu komentarza: ", response.status);
             }
         }).catch(error => {
             console.error("Błąd żądania:", error);

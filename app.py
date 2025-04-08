@@ -14,14 +14,13 @@ import string
 import time
 import jwt
 import json
+
 app = Flask(__name__)
 
 load_dotenv()
 
 from flask import Flask
 from flask_cors import CORS
-
-app = Flask(__name__)
 
 # Configure CORS for a specific domain and allow credentials
 CORS(app, resources={
@@ -100,8 +99,12 @@ def admin():
     cur = con.cursor()
 
     # If already logged in, show the admin panel
+    listaUzytkownikow = ""
+    response = cur.execute("SELECT id, personalData FROM users").fetchall()
+    for row in response:
+        listaUzytkownikow = listaUzytkownikow + row[1] + ", "
     if session.get('admin_logged_in'):
-        return render_template('admin/panel.html', siteName=siteName)
+        return render_template('admin/panel.html', siteName=siteName, listaUzytkownikow=listaUzytkownikow)
 
     # Handle GET request: Show login form
     if request.method == 'GET':
@@ -318,7 +321,7 @@ def stworzKomentarz():
     postId = json.get('postId')
 
     token = request.cookies.get('jwt_token')
-    print(token)  # For debugging
+    print(token)
 
     tokenFromUsername = verify_token(token)
 
@@ -410,7 +413,7 @@ def posty():
 
 
     posts_raw = db.execute(
-        "SELECT rowid, * FROM posty ORDER BY rowid DESC LIMIT ? OFFSET ?",
+        "SELECT rowid, * FROM posty ORDER BY timestamp DESC LIMIT ? OFFSET ?",
         (postow_na_scroll, offset)
     ).fetchall()
 
@@ -747,4 +750,4 @@ init_db()
 
 if __name__ == '__main__':
     init_db()
-    app.run(host='0.0.0.0', port=809, debug=True)
+    app.run(host='0.0.0.0', port=802, debug=True)

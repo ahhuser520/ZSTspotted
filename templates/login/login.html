@@ -149,6 +149,19 @@
         </div>
     </main>
     <script>
+        function changeLoginAndRegister() {
+  const login = document.getElementById("loginDiv");
+  const register = document.getElementById("registerDiv");
+
+  // Toggle visibility of login and register forms
+  if (login.style.display === "none") {
+      login.style.display = "block"; // Show login
+      register.style.display = "none"; // Hide register
+  } else {
+      login.style.display = "none"; // Hide login
+      register.style.display = "block"; // Show register
+  }
+}
         // Add event listeners to buttons
         document.getElementById("loginBtnClick").addEventListener('click', function () {
             login();
