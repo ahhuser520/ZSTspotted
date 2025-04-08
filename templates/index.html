@@ -2,72 +2,130 @@
 <html lang="pl">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon" />
 
         <title>Spotted Zespol Szkol Technicznych</title>
         <style>
-            body {
-                font-family: Arial, sans-serif;
-                background-color: #f0f0f0;
-                min-height: 100vh;
-            }
+/* General Styles */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
 
-            #posts {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(700px, 1fr));
-                gap: 20px;
-                padding: 20px;
-                max-width: 800px;
-                margin: 0 auto;
-                margin-top: 0px;
-                margin-bottom: 50px;
-            }
+/* Header */
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 1000;
+}
 
+header h1 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+    color: #444;
+}
 
-            #komentuj-button {
-                border-radius: 14px;
+header img {
+    height: 40px;
+}
 
-            }
+#zalogujSieBtn {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #555;
+    background: white;
+    cursor: pointer;
+}
 
-            sub {
-                font-size: 0.8em;
-                color: #666;
-            }
+/* Posts Container */
+#posts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(700px, 1fr));
+    gap: 20px;
+    padding: 80px 20px 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
 
-            .post {
-                margin-top: 0px;
-                background-color: #fff;
-                padding: 20px;
-                border-radius: 10px;
-                border: 0.5px solid #000;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                /*display: flex;
-                flex-direction: column;
-                justify-content: space-between;*/
-                height: 350px;
-                word-wrap: break-word;
+/* Post Card */
+.post {
+    background: #ffffff;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    height: auto;
+    min-height: 200px; /* Ensures the post doesn't shrink too small */
+    display: flex;
+    flex-direction: row; /* Allows post and comments to be side by side */
+    /* justify-content: space-between; */
+}
 
-                /*calc(1.2rem - (100vw - 200px) / 1000 * 1.2rem);*/
-            }
+.post:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
 
-            .post h2 {
-                margin-top: 0;
-            }
+.post h2 {
+    margin-top: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
 
-            .post p {
-                margin: 0;
-                font-size: 120%;
-            }
+.post p {
+    font-size: 1rem;
+    line-height: 1.4;
+}
 
-            .post .timestamp {
-                margin-top: 30px;
-                font-size: 0.8em;
-                color: #666;
-                margin-top: auto;
-            }
+.post .timestamp {
+    font-size: 0.85rem;
+    color: #777;
+    margin-top: auto;
+}
 
-            .add-post-button {
+/* Comments Section */
+.comments {
+    width: 250px; /* Set width for the comments section */
+    margin-left: 20px;
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    height: auto;
+}
+
+.comment {
+    background-color: #ffffff;
+    padding: 8px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.comment p {
+    font-size: 0.9rem;
+}
+
+.comment .timestamp {
+    font-size: 0.75rem;
+    color: #777;
+    text-align: right;
+}
+
+.add-post-button {
                 position: sticky;
                 margin-top: 10px;
                 top: 10px;
@@ -81,22 +139,52 @@
                 cursor: pointer;
                 z-index: 1;
             }
-            header{
-                height: 60px;
-                background-color: rgb(231, 231, 231);
-                margin: 0;
-                padding: 0;
-                text-align: center;
-                color: rgb(79, 79, 79);
-            }
-            header h1{
-                font-size: 150%;
-            }
-            @media only screen and (max-width: 767px) {
-                header h1 {
-                    display: none;
-                }
-            }
+
+.add-post-button:hover {
+    background: #0056b3;
+}
+
+/* Responsive Design for Mobile */
+@media only screen and (max-width: 767px) {
+    header h1 {
+        display: none;
+    }
+
+    #posts {
+        display: flex;
+        flex-direction: column;
+        padding: 70px 10px 20px;
+        width: 100%;
+        margin: 0;
+    }
+
+    .post {
+        padding: 14px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        margin-bottom: 10px;
+        min-height: 250px; /* Prevents posts from shrinking too small */
+        width: 100%; /* Ensure full width on mobile */
+        height: auto;
+        flex-direction: column; /* Stack post content and comments vertically */
+    }
+
+    .comments {
+        width: 100%; /* Full width for comments on mobile */
+        margin-left: 0;
+        padding: 10px;
+        background-color: #ffffff;
+        box-shadow: none;
+        margin-top: 15px;
+    }
+
+    .add-post-button {
+        bottom: 15px;
+        right: 15px;
+        font-size: 14px;
+        padding: 10px 16px;
+    }
+}
 
         </style>
     </head>
@@ -249,21 +337,34 @@ posts.forEach(async (post) => {
     postDiv.style.width = "49%";
     postDiv.style.height = "350px";
     postDiv.style.float = "left";
-    postDiv.style.borderRight = "1px black solid";
+    // postDiv.style.borderRight = "1px black solid";
     postDiv.innerHTML = `
         <sub># ${post.id}</sub>
         <p>${escapeHtml(post.content)}</p>
         <p class="timestamp">Dodano ${formatTimestamp(post.timestamp)}</p>
+        
     `;
+    if (window.innerWidth < 768) {
+        postDiv.style.width = "%";
+        postDiv.style.borderRight = "none";
+        html = `<hr>${html}`;
+    }
     el.appendChild(postDiv);
+
 
     // Right: Comments
     const commentsSection = document.createElement("div");
     commentsSection.style.width = "49%";
     commentsSection.style.height = "350px";
     commentsSection.style.float = "right";
-    commentsSection.style.position = "relative"; //position: relative;
+    commentsSection.style.position = "flex"; 
     let html = `<input type='text' id='input${tempI}' placeholder='Napisz komentarz...' />`;
+    if (window.innerWidth < 768) {
+        postDiv.style.width = "49%";
+        postDiv.style.borderRight = "none";
+        html = `<hr>${html}`;
+    }
+
 // Comments list
 
 if (post.comments && post.comments.length > 0) {
@@ -416,7 +517,7 @@ svgButton.addEventListener('click', function(){
             }
             .svgButtonAddComment {
     width: 10%;
-    border: 0;    background-color: #0085ea3e;
+    border: 0;    background-color: #f0f0f000;
     position: absolute;
     padding-top: 8px;
     padding-left: 7px;
@@ -430,3 +531,4 @@ svgButton.addEventListener('click', function(){
     </body>
     {{ footer|safe }}
 </html>
+
