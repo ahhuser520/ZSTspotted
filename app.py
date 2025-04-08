@@ -99,11 +99,11 @@ def admin():
     cur = con.cursor()
 
     # If already logged in, show the admin panel
-    listaUzytkownikow = ""
-    response = cur.execute("SELECT id, personalData FROM users").fetchall()
-    for row in response:
-        listaUzytkownikow = listaUzytkownikow + row[1] + ", "
     if session.get('admin_logged_in'):
+        listaUzytkownikow = ""
+        response = cur.execute("SELECT id, personalData FROM users").fetchall()
+        for row in response:
+            listaUzytkownikow = listaUzytkownikow + row[1] + ", "
         return render_template('admin/panel.html', siteName=siteName, listaUzytkownikow=listaUzytkownikow)
 
     # Handle GET request: Show login form
