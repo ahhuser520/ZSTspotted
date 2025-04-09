@@ -194,6 +194,12 @@ footer {
     float: left;
 }
 
+.errorMsg{
+    color: lightcoral;
+    margin: 0;
+    padding: 0;
+}
+
 /* Mobile-specific styles */
 @media (max-width: 768px) {
     .container {

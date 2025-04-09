@@ -14,6 +14,7 @@ import string
 import time
 import jwt
 import json
+import requests
 
 app = Flask(__name__)
 
@@ -154,6 +155,26 @@ def postbyid():
     except sqlite.Error as e:
         return jsonify({"error": "Internal Server Error"}), 500
 
+@app.route('/admin/usunkonto', methods=['POST'])
+@requires_admin
+def usunkonto():
+    try:
+        json_data = request.get_json()
+        accUsername = json_data.get('username')
+
+        if not accUsername:
+            return jsonify({"error": "ID not provided"}), 400
+        
+        db = sqlite.connect('database.db')
+        db.execute("DELETE FROM users WHERE username = ?", (accUsername,))
+        db.execute("DELETE FROM komentarze WHERE creatorUsername = ?", (accUsername,))
+        db.commit()
+        db.close()
+
+        return jsonify({"message": "Post successfully removed"}), 200
+
+    except sqlite.Error as e:
+        return jsonify({"error": "Internal Server Error"}), 500
 
 @app.route('/admin/usunpost', methods=['POST'])
 @requires_admin
@@ -262,10 +283,33 @@ def sendanonymousmessage():
         )
     ''')
     try:
-        db.execute("INSERT INTO posty (content) VALUES (?)", (jsonData.get('message'),))
-        db.commit()
-        last_row_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
-        response.set_data(str(last_row_id))
+        token = jsonData.get("cf-turnstile-response")
+        ip = request.headers.get("CF-Connecting-IP")
+
+        body = {
+            "secret": "0x4AAAAAABHTz1E62TH1iexNg8qA570y4Zk",
+            "response": token
+        }
+
+        print(body)
+
+        response2 = requests.post(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data=body  # Przesyłamy dane jako 'data', aby używać 'application/x-www-form-urlencoded'
+        )
+
+        result = response2.json()
+        print(result)
+        if result.get("success"):
+            print("antybot success")
+            db.execute("INSERT INTO posty (content) VALUES (?)", (jsonData.get('message'),))
+            db.commit()
+            last_row_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
+            response.set_data(str(last_row_id))
+        else:
+            print("antybot error")
+            response3 = {"antyboterror": "antyboterror"}
+            return jsonify(response3)
     except sqlite.Error as e:
         response.status_code = 500
         response.set_data(str(e))
@@ -344,7 +388,13 @@ def stworzKomentarz():
     """)
 
     # Insert new comment
-    db.execute(
+    user_data = db.execute(
+        "SELECT personalData FROM users WHERE username = ? AND personalData IS NOT NULL AND personalData != ''",
+        (username,)
+    ).fetchone()
+
+    if user_data:
+        db.execute(
         'INSERT INTO komentarze (postId, content, creatorUsername) VALUES (?, ?, ?)',
         (postId, wiadomosc, username)
     )
@@ -455,6 +505,8 @@ def posty():
 
             if user_data:
                 display_name = user_data['personalData']
+            else:
+                display_name = "Konto zostało usunięte"
 
             # nadpisujemy display name
             comment_dict['personalData'] = display_name
@@ -765,4 +817,4 @@ init_db()
 
 if __name__ == '__main__':
     init_db()
-    app.run(host='0.0.0.0', port=834, debug=True)
+    app.run(host='0.0.0.0', port=3123, debug=True)

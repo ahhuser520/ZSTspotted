@@ -53,24 +53,35 @@ function setCookie(name, value, days) {
 
 function sendMessage() {
     const message = messageInput.value.trim();
+    console.log(message)
     if(message.length > 500){
         alert("Maksymalna ilość znaków to 500.");
     }  
 
+    const captchaToken = document.getElementsByName("cf-turnstile-response")[0].value;
+
     const payload = {
-        message: message
+        'message': message,
+        'cf-turnstile-response': captchaToken  // dodajemy token do payloadu
     };
+
+    console.log(payload)
+    
 
     fetch('/sendanonymousmessage', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
     })
     .then(response => response.json())
     .then(data => {
-        console.log('Message sent successfully:', data);
+        console.log('server response:', data);
+        if(data.antyboterror){
+            console.log("antybot error");
+            document.getElementById("captchaerror").textContent = "Potwierdz Captche";
+        }
         messageInput.value = '';
         sendButton.style.display = 'none';
         window.location.href = '/';
