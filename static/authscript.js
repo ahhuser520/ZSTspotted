@@ -159,6 +159,7 @@ async function register(){
   let passwordRegister2 = document.getElementById("passwordRegister2");
   let personalData = document.getElementById("personalData");
   let policyPrivacyAgreemenet = document.getElementById("policyPrivacyAgreemenet");
+  const captchaToken = document.getElementsByName("cf-turnstile-response")[0].value;
   let errorMsg = "";
   let isOkay = true;
   if(passwordRegister1.value != passwordRegister2.value){
@@ -194,11 +195,15 @@ async function register(){
         password: saltedPassword,
         salt: salt,
         personalData: personalData.value,
-        policyPrivacyAgr: String(policyPrivacyAgreemenet.checked)
+        policyPrivacyAgr: String(policyPrivacyAgreemenet.checked),
+        'cf-turnstile-response': captchaToken
       };
       console.log("authScript.js, register(), Sending JSON data: "+data+", to server: "+url+"register");
       const response = await sendJsonRequest(url+"register", data);
       if(!response.ok){
+        if(response.status == 405){
+          document.getElementById("error2").textContent = "Potwierdz, ze nie jesteś robotem.";
+        }
         throw new Error(response.status);
       }else{
         const responseData = await response.json();

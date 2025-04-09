@@ -109,6 +109,48 @@
         <div class="container remove-post-container">
             <h1>Users list</h1>
             {{ listaUzytkownikow }}
+            <input type="text" id="idAccUsun" placeholder="ID użytkownika do usunięcia" />
+<button id="usunBtn">Usuń użytkownika po ID</button>
+
+<script>
+// Add event listener to the button
+document.getElementById("usunBtn").addEventListener("click", function () {
+    // Get the user ID from the input field
+    const userId = document.getElementById("idAccUsun").value;
+
+    // Prepare the JSON payload
+    const data = {
+        id: userId
+    };
+
+    // Send the POST request to the /admin/usunkonto endpoint
+    fetch("/admin/usunkonto", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json(); // Assuming the server returns JSON
+        } else {
+            throw new Error("Błąd podczas usuwania konta.");
+        }
+    })
+    .then(result => {
+        // Handle successful response
+        console.log("Konto usunięte:", result);
+        alert("Konto zostało usunięte.");
+    })
+    .catch(error => {
+        // Handle errors
+        console.error("Wystąpił błąd:", error);
+        alert("Nie udało się usunąć konta.");
+    });
+});
+</script>
+
         </div>
 
         <div class="container remove-post-container" style="float: right; width: 60%;">

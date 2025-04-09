@@ -81,10 +81,11 @@ function sendMessage() {
         if(data.antyboterror){
             console.log("antybot error");
             document.getElementById("captchaerror").textContent = "Potwierdz Captche";
+        }else{
+            messageInput.value = '';
+            sendButton.style.display = 'none';
+            window.location.href = '/';
         }
-        messageInput.value = '';
-        sendButton.style.display = 'none';
-        window.location.href = '/';
     })
     .catch(error => {
         console.error('Error sending message:', error);

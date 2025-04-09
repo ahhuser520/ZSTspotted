@@ -104,7 +104,7 @@ def admin():
         listaUzytkownikow = ""
         response = cur.execute("SELECT id, personalData FROM users").fetchall()
         for row in response:
-            listaUzytkownikow = listaUzytkownikow + row[1] + ", "
+            listaUzytkownikow = listaUzytkownikow + str(row[0]) + " " + row[1] + ", "
         return render_template('admin/panel.html', siteName=siteName, listaUzytkownikow=listaUzytkownikow)
 
     # Handle GET request: Show login form
@@ -160,12 +160,15 @@ def postbyid():
 def usunkonto():
     try:
         json_data = request.get_json()
-        accUsername = json_data.get('username')
+        accId = json_data.get('id')
 
-        if not accUsername:
-            return jsonify({"error": "ID not provided"}), 400
-        
+        if not accId:
+            return jsonify({"error": "accId not provided"}), 400
         db = sqlite.connect('database.db')
+        accUsername = db.execute('SELECT username FROM users WHERE id=?', (accId,)).fetchone()
+
+        accUsername = accUsername[0]
+    
         db.execute("DELETE FROM users WHERE username = ?", (accUsername,))
         db.execute("DELETE FROM komentarze WHERE creatorUsername = ?", (accUsername,))
         db.commit()
@@ -174,6 +177,7 @@ def usunkonto():
         return jsonify({"message": "Post successfully removed"}), 200
 
     except sqlite.Error as e:
+        print(e)
         return jsonify({"error": "Internal Server Error"}), 500
 
 @app.route('/admin/usunpost', methods=['POST'])
@@ -389,15 +393,16 @@ def stworzKomentarz():
 
     # Insert new comment
     user_data = db.execute(
-        "SELECT personalData FROM users WHERE username = ? AND personalData IS NOT NULL AND personalData != ''",
-        (username,)
+    "SELECT personalData, username FROM users WHERE username = ? AND personalData IS NOT NULL AND personalData != ''",
+    (username,)
     ).fetchone()
 
-    if user_data:
+    # Check if user exists and data is not empty
+    if user_data is not None:
         db.execute(
-        'INSERT INTO komentarze (postId, content, creatorUsername) VALUES (?, ?, ?)',
-        (postId, wiadomosc, username)
-    )
+            'INSERT INTO komentarze (postId, content, creatorUsername) VALUES (?, ?, ?)',
+            (postId, wiadomosc, username)
+        )
 
     db.commit()
     db.close()
@@ -610,9 +615,11 @@ def register():
     try:
         row = 0
         token = ""
+        tokenCloudflare = ""
         success = {"success": "no"}
         try:
             data = request.get_json()
+            tokenCloudflare = data.get("cf-turnstile-response")
             username = str(data.get('username'))
             password = str(data.get('password'))
             personalData = str(data.get('personalData'))
@@ -622,35 +629,53 @@ def register():
                 abort(400)
         except KeyError:
             abort(400)
+        
+        body = {
+            "secret": "0x4AAAAAABHTz1E62TH1iexNg8qA570y4Zk",
+            "response": tokenCloudflare
+        }
 
-        # Validate username and password
-        if (type(username) == str and type(password) == str and len(username) > 4 and len(password) > 4) and (len(username) <= 256 and len(password) <= 256):
-            salt = str(data.get('salt'))
-            if salt != "" and len(salt) == 16:
-                db = sqlite.connect('database.db')
-                cursor = db.cursor()
-                cursor.execute('''CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username TEXT NOT NULL UNIQUE,
-                    personalData TEXT DEFAULT NULL,
-                    password TEXT NOT NULL,
-                    salt TEXT NOT NULL)''')
+        print(body)
 
-                cursor.execute("SELECT salt FROM users WHERE username=?", (username,))
-                row = cursor.fetchone()
-                if row:
-                    success = {"success": "no", "token": ""}
-                    return jsonify(success), 200
+        response2 = requests.post(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data=body  # Przesyłamy dane jako 'data', aby używać 'application/x-www-form-urlencoded'
+        )
+        db = sqlite.connect('database.db')
+        result2 = response2.json()
+        print(result2)
+        if result2.get("success"):
+            if (type(username) == str and type(password) == str and len(username) > 4 and len(password) > 4) and (len(username) <= 256 and len(password) <= 256):
+                salt = str(data.get('salt'))
+                if salt != "" and len(salt) == 16:
+                    cursor = db.cursor()
+                    cursor.execute('''CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username TEXT NOT NULL UNIQUE,
+                        personalData TEXT DEFAULT NULL,
+                        password TEXT NOT NULL,
+                        salt TEXT NOT NULL)''')
+
+                    cursor.execute("SELECT salt FROM users WHERE username=?", (username,))
+                    row = cursor.fetchone()
+                    if row:
+                        success = {"success": "no", "token": ""}
+                        return jsonify(success), 200
+                    else:
+                        cursor.execute("INSERT INTO users (username, personalData, password, salt) VALUES (?, ?, ?, ?);", (username, personalData, password, salt))
+                        db.commit()
+                        token = generate_token(username)
+                        success = {"success": "yes", "token": str(token)}
+                        return jsonify(success), 201
                 else:
-                    cursor.execute("INSERT INTO users (username, personalData, password, salt) VALUES (?, ?, ?, ?);", (username, personalData, password, salt))
-                    db.commit()
-                    token = generate_token(username)
-                    success = {"success": "yes", "token": str(token)}
-                    return jsonify(success), 201
+                    abort(400)
             else:
                 abort(400)
         else:
-            abort(400)
+            try:
+                abort(405)
+            except:
+                abort(405)
     except sqlite.Error as err:
         print('app.py, register(), SQLiteDataBaseConnectionError: ', err)
         abort(500)

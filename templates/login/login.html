@@ -7,6 +7,7 @@
     <meta name="author" content="anonymous" />
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon" />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <script type="module" src="{{ url_for('static', filename='authscript.js') }}"></script>
     <style>
         body {
@@ -94,6 +95,7 @@
 
         #registerDiv {
             display: none;
+            margin-top: 0px;
         }
         #loginTitle{
             margin: 0;
@@ -141,6 +143,13 @@
                 <input type="checkbox" id="policyPrivacyAgreemenet" />
                 <label for="policyPrivacyAgreemenet" style="font-size: 0.8rem;">Wyrażam zgodę na przetwarzanie danych osobowych zgodnie z <a href="/privacypolicy">polityką prywatności</a>*</label>
             </div>
+
+            <div
+                class="cf-turnstile"
+                data-sitekey="0x4AAAAAABHTz8tszk70cNcK"
+                data-callback="javascriptCallback"
+                style="margin-top: 10px"
+                ></div>
 
             <button class="loginButton" id="registerBtnClick">Zarejestruj się</button>
 
