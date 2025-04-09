@@ -393,7 +393,7 @@ def stworzKomentarz():
 
     # Insert new comment
     user_data = db.execute(
-    "SELECT personalData, username FROM users WHERE username = ? AND personalData IS NOT NULL AND personalData != ''",
+    "SELECT username FROM users WHERE username = ? AND personalData IS NOT NULL AND personalData != ''",
     (username,)
     ).fetchone()
 
