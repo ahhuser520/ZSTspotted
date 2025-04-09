@@ -53,6 +53,9 @@ function setCookie(name, value, days) {
 
 function sendMessage() {
     const message = messageInput.value.trim();
+    if(message.length > 500){
+        alert("Maksymalna ilość znaków to 500.");
+    }  
 
     const payload = {
         message: message

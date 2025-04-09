@@ -63,7 +63,7 @@ header img {
 
 /* Post Card */
 .post {
-    background: #ffffff;
+    background-color: #ffffff;
     padding: 16px;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -186,6 +186,12 @@ header img {
         font-size: 14px;
         padding: 10px 16px;
     }
+    .postDiv{
+        scrollbar-width: none;
+    }
+    .postDiv::-webkit-scrollbar {
+        display: none; /* Chrome, Safari */
+        }
 }
 
         </style>
@@ -337,12 +343,17 @@ posts.forEach(async (post) => {
     const postDiv = document.createElement("div");
     postDiv.style.width = "49%";
     postDiv.style.height = "350px";
+    postDiv.style.overflow = "hidden";
     postDiv.style.float = "left";
     // postDiv.style.borderRight = "1px black solid";
     postDiv.innerHTML = `
         <sub># ${post.id}</sub>
-        <p>${escapeHtml(post.content)}</p>
-        <p class="timestamp">Dodano ${formatTimestamp(post.timestamp)}</p>
+        <p class='postContent' style='overflow: scroll; -ms-overflow-style: none; scrollbar-width: none;'>${escapeHtml(post.content)}</p>
+        <p class="timestamp">Dodano ${formatTimestamp(post.timestamp)}</p><style>
+  .postContent::-webkit-scrollbar {
+    display: none;
+  }
+</style>
         
     `;
     if (window.innerWidth < 768) {

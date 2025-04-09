@@ -125,6 +125,33 @@ main h3{
                     document.getElementById("updateBtn").disabled = true;
                 }
             })
+            document.getElementById("updateBtn").addEventListener('click', async function(){
+                let personalDataValueTEMP = document.getElementById("personalData").value;
+                personalDataValue = personalDataValueTEMP;
+                fetch('/zmienPersonalData', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        personalData: personalDataValueTEMP,
+                    }),
+                    credentials: 'include' // Send cookies (JWT token)
+                })
+                .then(response => {
+                    if (response.status === 200) {
+                        location.reload();
+                    } else if (response.status === 401) {
+                        alert("Błąd autoryzacji.");
+                    } else {
+                        alert("Wystąpił nieoczekiwany błąd.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Błąd podczas usuwania komentarza:", error);
+                    alert("Błąd połączenia z serwerem.");
+                });
+            })
             async function hash(data) {
                 console.log("utils.js, hash(), Hashing data: " + data);
                 const encoder = new TextEncoder();

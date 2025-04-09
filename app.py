@@ -250,7 +250,7 @@ def tos():
 @app.route('/sendanonymousmessage', methods=['POST'])
 def sendanonymousmessage():
     jsonData = request.get_json()
-    if not jsonData or not jsonData.get('message') or len(jsonData.get('message')) == 0:  # Check if 'message' key exists
+    if not jsonData or not jsonData.get('message') or len(jsonData.get('message')) == 0 or len(jsonData.get('message')) > 500:  # Check if 'message' key exists
         abort(400)
 
     response = make_response('', 200)
@@ -389,6 +389,21 @@ def usunKomentarz():
     db.close()
 
     return make_response('', 204)
+
+@app.route('/zmienPersonalData', methods=['POST'])
+def zmienPersonalData():
+    json = request.get_json()
+    usernameFromToken = verify_token(request.cookies.get('jwt_token'))
+    if usernameFromToken != "invalid" and usernameFromToken != "expired":
+        db = sqlite.connect('database.db')
+        newPersonalData = json.get('personalData')  
+        db.execute('UPDATE users SET personalData=? WHERE username=?', (newPersonalData, usernameFromToken))
+        db.commit()
+        db.close()
+        return make_response('', 200)
+    else:
+        abort(401)
+    db.execute
 
 @app.route('/posty')
 def posty():
@@ -750,4 +765,4 @@ init_db()
 
 if __name__ == '__main__':
     init_db()
-    app.run(host='0.0.0.0', port=832, debug=True)
+    app.run(host='0.0.0.0', port=834, debug=True)
