@@ -172,6 +172,10 @@ async function register(){
       errorMsg = "Hasła są za krótkie.";
       isOkay = false;
   }
+  if(personalData.value.length > 100){
+    errorMsg = "Maksymalna ilość znaków to 100.";
+    isOkay = false;
+  }
   if(!policyPrivacyAgreemenet.checked){
     errorMsg = "Musisz zaakceptować politykę prywatności.";
     isOkay = false;

@@ -109,20 +109,30 @@ main h3{
             border-radius: 8px;
             cursor: pointer;
         }
+
+        .errorMsg{
+    color: lightcoral;
+    margin: 0;
+        }
     </style>
     <main>
         <h3>Zarządzaj kontem</h3>
         Imię i nazwisko:<br />
         <input type="text" id="personalData" value="{{ personalData }}" placeholder="Adam Kowalski" />
         <p style="padding: 0; margin: 0; font-size: 70%; color:rgba(0, 0, 0, 0.489); margin-left: 2px;"><b>Uwaga!</b> Imię i nazwisko są publiczne i widoczne m.in w komentarzach.</p>
+        <p class="errorMsg" id="error1"></p>
         <button id="updateBtn" class="submitBtn" disabled>Uaktualnij</button>
         <script>
             let personalDataValue = document.getElementById("personalData").value;
             document.getElementById("personalData").addEventListener('input', function(){
-                if(document.getElementById("personalData").value != personalDataValue){
-                    document.getElementById("updateBtn").disabled = false;
+                if(document.getElementById("personalData").value.length < 101){
+                    if(document.getElementById("personalData").value != personalDataValue){
+                        document.getElementById("updateBtn").disabled = false;
+                    }else{
+                        document.getElementById("updateBtn").disabled = true;
+                    }
                 }else{
-                    document.getElementById("updateBtn").disabled = true;
+                    document.getElementById("error1").textContent = "Maksymalna ilość znaków to 100.";
                 }
             })
             document.getElementById("updateBtn").addEventListener('click', async function(){

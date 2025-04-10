@@ -208,20 +208,19 @@ def usunpost():
     except sqlite.Error as e:
         return jsonify({"error": "Internal Server Error"}), 500
     
-@app.route('/api/changePersonalData')
+'''@app.route('/api/changePersonalData')
 def changePersonalData():
     json = request.get_json()
     username = json.get('username')
     personalData = json.get('personalData')
-    token = json.get('token')
     usernameFromToken = verify_token(token)
     if usernameFromToken != username or usernameFromToken == "expired" or usernameFromToken == "invalid":
         abort(401)
     else:
         db = sqlite.connect('database.db')
-        db.execute("UPDATE users SET personalData = '?' WHERE username = ?", (personalData, username,))
+        db.execute("UPDATE users SET personalData = substr(?, 0, 100) WHERE username = ?", (personalData, username,))
         db.commit()
-        db.close()
+        db.close()'''
     
 @app.route('/admin/wyswietlZgloszenie', methods=['POST'])
 @requires_admin
@@ -451,14 +450,13 @@ def zmienPersonalData():
     usernameFromToken = verify_token(request.cookies.get('jwt_token'))
     if usernameFromToken != "invalid" and usernameFromToken != "expired":
         db = sqlite.connect('database.db')
-        newPersonalData = json.get('personalData')  
-        db.execute('UPDATE users SET personalData=? WHERE username=?', (newPersonalData, usernameFromToken))
+        newPersonalData = json.get('personalData')
+        db.execute('UPDATE users SET personalData = substr(?, 0, 100) WHERE username=?', (newPersonalData, usernameFromToken))
         db.commit()
         db.close()
         return make_response('', 200)
     else:
         abort(401)
-    db.execute
 
 @app.route('/posty')
 def posty():
@@ -652,7 +650,7 @@ def register():
                     cursor.execute('''CREATE TABLE IF NOT EXISTS users (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         username TEXT NOT NULL UNIQUE,
-                        personalData TEXT DEFAULT NULL,
+                        personalData VARCHAR(100) DEFAULT NULL,
                         password TEXT NOT NULL,
                         salt TEXT NOT NULL)''')
 
@@ -662,7 +660,7 @@ def register():
                         success = {"success": "no", "token": ""}
                         return jsonify(success), 200
                     else:
-                        cursor.execute("INSERT INTO users (username, personalData, password, salt) VALUES (?, ?, ?, ?);", (username, personalData, password, salt))
+                        cursor.execute("INSERT INTO users (username, personalData, password, salt) VALUES (?, substr(?, 0, 100), ?, ?);", (username, personalData, password, salt))
                         db.commit()
                         token = generate_token(username)
                         success = {"success": "yes", "token": str(token)}
