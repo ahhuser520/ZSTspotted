@@ -47,7 +47,11 @@ siteName = 'ZSTspotted'
 
 # Before request - Adding footer to context
 @app.before_request
-def add_footer_to_context():
+def redirect_to_https_and_add_footer():
+    # Redirect to HTTPS if the request is not secure
+    if not request.is_secure:
+        url = request.url.replace("http://", "https://", 1)
+        return redirect(url, code=301)
     g.footer = render_template('modules/footer.html')
 
 # Admin session check decorator
