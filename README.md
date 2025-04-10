@@ -5,8 +5,11 @@ If want run this web app:
 ```
 python3 -m venv venv
 source venv/bin/activate
-pip3 install mysql-connector-python
-pip3 install flask
-pip3 install flask_limiter
+pip3 install Flask
+pip3 install flask-limiter
+pip3 install flask-cors
+pip3 install python-dotenv
+pip3 install pyjwt
+pip3 install requests
 python3 app.py
 ```
