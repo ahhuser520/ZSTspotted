@@ -403,7 +403,7 @@ def stworzKomentarz():
     # Check if user exists and data is not empty
     if user_data is not None:
         db.execute(
-            'INSERT INTO komentarze (postId, content, creatorUsername) VALUES (?, ?, ?)',
+            'INSERT INTO komentarze (postId, content, creatorUsername) VALUES (?, substr(?, 0, 1000), ?)',
             (postId, wiadomosc, username)
         )
 

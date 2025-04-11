@@ -456,9 +456,17 @@ inputElement.addEventListener("input", async function (event) {
         svgButton.style.display = "none";
     }
 });
+let isAllowedToSend = true;
 async function wyslij(){
+    if(isAllowedToSend){
+        isAllowedToSend = false;
         event.preventDefault();
         const message = inputElement.value.trim();
+        if(message.length > 1000){
+            alert("Maksymalna liczba znaków to 1000");
+            isAllowedToSend = true;
+            return;
+        }
         
         fetch("/stworzKomentarz", {
             method: "POST",
@@ -476,11 +484,14 @@ async function wyslij(){
                 location.reload(); // Reload to show new comment
             } else {
                 alert("Błąd przy dodawaniu komentarza: ", response.status);
+                isAllowedToSend = true;
             }
         }).catch(error => {
             console.error("Błąd żądania:", error);
+            isAllowedToSend = true;
         });
     }
+}
 svgButton.addEventListener('click', function(){
             wyslij();
         })

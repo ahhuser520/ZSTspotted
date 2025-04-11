@@ -50,8 +50,10 @@ function setCookie(name, value, days) {
     const expires = `expires=${date.toUTCString()}`;
     document.cookie = `${name}=${value}; ${expires}; path=/`;
 }
-
+let isAllowedToSend = true;
 function sendMessage() {
+    if(isAllowedToSend){
+    isAllowedToSend = false;
     const message = messageInput.value.trim();
     console.log(message)
     if(message.length > 500){
@@ -86,9 +88,12 @@ function sendMessage() {
             sendButton.style.display = 'none';
             window.location.href = '/';
         }
+        isAllowedToSend = true;
     })
     .catch(error => {
+        isAllowedToSend = true;
         console.error('Error sending message:', error);
     });
+}
 }
 
