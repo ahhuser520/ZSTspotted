@@ -162,7 +162,7 @@ header img {
     #posts {
         display: flex;
         flex-direction: column;
-        padding: 10px 0px 70px 4.5%;
+        padding: 12px 0px 70px 4.5%;
         width: 100%;
         margin: 0;
     }
@@ -200,6 +200,10 @@ header img {
     .postDiv::-webkit-scrollbar {
         display: none; /* Chrome, Safari */
         }
+        input, textarea, select {
+    font-size: 16px;
+  }
+
 }
 
         </style>
@@ -373,7 +377,7 @@ posts.forEach(async (post) => {
     commentsSection.style.height = "350px";
     commentsSection.style.float = "right";
     commentsSection.style.position = "flex";
-    let html = `<input type='text' id='input${tempI}' placeholder='Napisz komentarz...' />`;
+    let html = `<input type='text' enterkeyhint="enter" id='input${tempI}' placeholder='Napisz komentarz...' />`;
     if (window.innerWidth < 768) {
         postDiv.style.width = "49%";
         postDiv.style.borderRight = "none";
@@ -456,9 +460,11 @@ svgButton.innerHTML = `
     </svg>
 `;
 svgButton.className = "svgButtonAddComment";
+
 commentsSection.appendChild(svgButton);
 inputElement.addEventListener("input", async function (event) {
     // If input is not empty
+    if (window.innerWidth > 768) {
     if(inputElement.value.length > 0){
         inputElement.style.width = "85%"; // Set width to 85% when there is text
         svgButton.style.display = "block";
@@ -467,6 +473,7 @@ inputElement.addEventListener("input", async function (event) {
         inputElement.style.width = "95%";
         svgButton.style.display = "none";
     }
+}
 });
 let isAllowedToSend = true;
 async function wyslij(){
