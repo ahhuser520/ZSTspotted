@@ -4,20 +4,20 @@
     <a href="/tos">Regulamin</a>
     <a
         href="http://7ia7pk5wzcva6izkyqjdjsgnyge724byfbtf5fvegh3wh6bfnqjk25ad.onion"
-        >Strona na Tor</a
-    >
+        >Strona na Tor</a>
 </div>
-<style>
 
+<style>
 .links {
     font-family: "Courier New", monospace;
     display: flex;
     justify-content: center;
     width: 100%;
-    padding: 20px 0; /* Dodajemy trochę przestrzeni wokół stopki */
-    background-color: #f8f8f8; /* Opcjonalnie, aby wyróżnić stopkę */
+    padding: 20px 0;
+    background-color: #f8f8f8;
     position: fixed;
     bottom: 0;
+    flex-wrap: wrap; /* pozwala zawijać linki w kolejnym wierszu na małych ekranach */
 }
 
 .links a {
@@ -26,13 +26,20 @@
     margin: 0 15px;
 }
 
+/* Styl hover */
 .links a:hover {
     color: #007bff;
 }
-@media only screen and (max-width: 767px) {
-.links{
-    overflow-x: hidden;
-}
-}
 
+/* Media query dla ekranów o szerokości max 767px */
+@media only screen and (max-width: 767px) {
+    .links {
+        font-size: 14px; /* mniejszy rozmiar tekstu na telefonach */
+        overflow-x: hidden;
+    }
+
+    .links a {
+        margin: 5px 10px; /* mniej marginesu by zmieścić więcej linków */
+    }
+}
 </style>

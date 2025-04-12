@@ -20,12 +20,17 @@
                 <button class="back-button">Powrót</button>
             </a>
             <h1>Spotted Zespół Szkół Technicznych</h1>
-            <p style="float: left; padding: 0; margin: 0; margin-left: 2px;">Wyślij anonimową wiadomość: </p>
+            <p style="float: left; padding: 0; margin: 0; margin-left: 3%;">Wyślij anonimową wiadomość: </p>
             <input
                 id="messageInput"
                 type="text"
                 placeholder="JAVASCRIPT ERROR"
             />
+            <style>
+                #messageInput{
+                    width: 90%;
+                }
+            </style>
 
             <script>
                 function losujPlaceholder(){
@@ -82,6 +87,11 @@
         footer{
             position: fixed !important;
             bottom: 0 !important;
+        }
+        @media (max-width: 768px) {
+            .container{
+                width: 80%;
+            }
         }
     </style>
 </html>
