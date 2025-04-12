@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon" />
-
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Spotted Zespol Szkol Technicznych</title>
         <style>
 /* General Styles */
@@ -149,6 +149,10 @@ header img {
 @media only screen and (max-width: 767px) {
     header h1 {
         display: none;
+    }
+    header{
+        width: 95%;
+        overflow-x: hidden;
     }
 
     #posts {
@@ -356,11 +360,6 @@ posts.forEach(async (post) => {
 </style>
         
     `;
-    if (window.innerWidth < 768) {
-        postDiv.style.width = "%";
-        postDiv.style.borderRight = "none";
-        html = `<hr>${html}`;
-    }
     el.appendChild(postDiv);
 
 
@@ -412,7 +411,16 @@ for (const comment of post.comments) {
     html += `<br /><br /><br /><br /><br /><br /><br /><br />
         <p style='text-align: center; font-size: 90%'>Bądź pierwszą osobą, która skomentuje ten post.</p>`;
 }
+
     commentsSection.innerHTML = html;
+    if (window.innerWidth < 768) {
+    el.style.width = "88%";
+        postDiv.style.width = "100%";
+        postDiv.style.height = "auto";
+        postDiv.style.borderRight = "none";
+        commentsSection.style.width = "100%"
+        html = `<hr>${html}`;
+    }
     el.appendChild(commentsSection);
     postDivBIG.appendChild(el);
     let inputElement = document.getElementById("input" + tempI);
