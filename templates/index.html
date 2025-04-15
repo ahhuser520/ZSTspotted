@@ -213,7 +213,7 @@ header img {
 
         <header>
             <img src="{{ url_for('static', filename='favicon.ico') }}" style="float: left; height: 60%; margin-left: 0px; margin-top: 4px;" />
-            <h1 style="margin: 0; padding: 0; float: left; padding-top: 0px; margin-left: 10px">Spotted szkoły browarowa</h1>
+            <h1 style="margin: 0; padding: 0; float: left; padding-top: 0px; text-align: center; width: 100%; padding-right: 75px;">Spotted szkoły browarowa</h1>
             <button id="zalogujSieBtn">Zaloguj się</button>
             <script>
                         function getSecureData(name) {
@@ -226,7 +226,16 @@ header img {
                 #zalogujSieBtn{
                     padding: 5px;
                     float: right;
-                    margin-right: 30px;
+                    position: absolute;
+                    right: 5%;
+                }
+                @media only screen and (max-width: 767px) {
+                    #zalogujSieBtn{
+                        padding: 5px;
+                        float: right;
+                        position: absolute;
+                        right: 10%;
+                    }
                 }
             </style>
             <script>
@@ -379,7 +388,7 @@ posts.forEach(async (post) => {
     commentsSection.style.position = "flex";
     let html = `<input type='text' enterkeyhint="enter" id='input${tempI}' placeholder='Napisz komentarz...' />`;
     if (window.innerWidth < 768) {
-        postDiv.style.width = "49%";
+        postDiv.style.width = "95%";
         postDiv.style.borderRight = "none";
         html = `<hr>${html}`;
     }
@@ -423,10 +432,9 @@ for (const comment of post.comments) {
     commentsSection.innerHTML = html;
     if (window.innerWidth < 768) {
     el.style.width = "88%";
-        postDiv.style.width = "100%";
         postDiv.style.height = "auto";
         postDiv.style.borderRight = "none";
-        commentsSection.style.width = "100%"
+        commentsSection.style.width = "100%";
         html = `<hr>${html}`;
     }
     el.appendChild(commentsSection);

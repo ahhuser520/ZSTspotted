@@ -137,6 +137,7 @@ main h3{
             })
             document.getElementById("updateBtn").addEventListener('click', async function(){
                 let personalDataValueTEMP = document.getElementById("personalData").value;
+                document.getElementById("updateBtn").disabled = true;
                 personalDataValue = personalDataValueTEMP;
                 fetch('/zmienPersonalData', {
                     method: 'POST',
@@ -153,13 +154,17 @@ main h3{
                         location.reload();
                     } else if (response.status === 401) {
                         alert("Błąd autoryzacji.");
+                        document.getElementById("updateBtn").disabled = false;
                     } else {
                         alert("Wystąpił nieoczekiwany błąd.");
+                        document.getElementById("updateBtn").disabled = false;
                     }
+                    document.getElementById("updateBtn").disabled = false;
                 })
                 .catch(error => {
                     console.error("Błąd podczas usuwania komentarza:", error);
                     alert("Błąd połączenia z serwerem.");
+                    document.getElementById("updateBtn").disabled = false;
                 });
             })
             async function hash(data) {

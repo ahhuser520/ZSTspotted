@@ -58,42 +58,44 @@ function sendMessage() {
     console.log(message)
     if(message.length > 500){
         alert("Maksymalna ilość znaków to 500.");
-    }  
+    }else if(message.length == 0){
+    }else{
+        const captchaToken = document.getElementsByName("cf-turnstile-response")[0].value;
 
-    const captchaToken = document.getElementsByName("cf-turnstile-response")[0].value;
-
-    const payload = {
-        'message': message,
-        'cf-turnstile-response': captchaToken  // dodajemy token do payloadu
-    };
-
-    console.log(payload)
+        const payload = {
+            'message': message,
+            'cf-turnstile-response': captchaToken  // dodajemy token do payloadu
+        };
     
-
-    fetch('/sendanonymousmessage', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload),
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('server response:', data);
-        if(data.antyboterror){
-            console.log("antybot error");
-            document.getElementById("captchaerror").textContent = "Potwierdz Captche";
-        }else{
-            messageInput.value = '';
-            sendButton.style.display = 'none';
+        console.log(payload)
+        
+    
+        fetch('/sendanonymousmessage', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('server response:', data);
+            if(data.antyboterror){
+                console.log("antybot error");
+                document.getElementById("captchaerror").textContent = "Potwierdz Captche";
+            }else{
+                messageInput.value = '';
+                sendButton.style.display = 'none';
+                window.location.href = '/';
+            }
+            isAllowedToSend = true;
+        })
+        .catch(error => {
+            isAllowedToSend = true;
+            console.error('Error sending message:', error);
             window.location.href = '/';
-        }
-        isAllowedToSend = true;
-    })
-    .catch(error => {
-        isAllowedToSend = true;
-        console.error('Error sending message:', error);
-    });
+        });
+    }
 }
 }
 

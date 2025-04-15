@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, request, abort, make_respons
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_cors import CORS
-import sqlite3 as sqlite
+#import sqlite3 as sqlite
 import random
 from dotenv import load_dotenv
 import os
@@ -15,6 +15,18 @@ import time
 import jwt
 import json
 import requests
+import mysql.connector
+from mysql.connector import Error
+
+connData = {
+    "host": "localhost",
+    "user": "ahhuser", #ahhuser
+    "password": "dsa@dsau89./../@ADSe1cv", #5aa84+ZU3_7ORGYFQI1MiELUw\pm;(>JayC7@Z,p=:6_M.dy]a/*<}dm2XYD{Wl?
+    "database": "zstspotted",
+    "charset": "utf8mb4",
+    "collation": "utf8mb4_general_ci"
+}
+
 
 app = Flask(__name__)
 
@@ -65,16 +77,53 @@ def requires_admin(f):
 
 # Initialize the database
 def init_db():
-    con = sqlite.connect('database.db')
+    con = mysql.connector.connect(**connData)
     cur = con.cursor()
+
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS support (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            contentMessage TEXT NOT NULL,
+            email TEXT DEFAULT ''
+        );
+    ''')
 
     # Check if the 'admin' table exists; if not, create it
     cur.execute('''
-        CREATE TABLE IF NOT EXISTS admin (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+    CREATE TABLE IF NOT EXISTS admin (
+            id INT PRIMARY KEY AUTO_INCREMENT,
             passkey TEXT NOT NULL
         )
     ''')
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS komentarze (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            postId INT NOT NULL,
+            content TEXT NOT NULL,
+            creatorUsername TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+    """)
+
+    cur.execute('''
+    CREATE TABLE IF NOT EXISTS tokens (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            deviceName VARCHAR(255) DEFAULT NULL,
+            token TEXT NOT NULL,
+            username TEXT NOT NULL
+        )
+    ''')
+
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS posty (
+            id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            content TEXT NOT NULL
+        );
+    ''')
+
 
     con.commit()
 
@@ -86,7 +135,7 @@ def init_db():
         random_passkey = ''.join(random.choices('0123456789abcdef', k=32))
 
         # Store the generated passkey in the database
-        cur.execute("INSERT INTO admin (passkey) VALUES (?)", (random_passkey,))
+        cur.execute("INSERT INTO admin (passkey) VALUES (%s)", (random_passkey,))
         con.commit()
 
         # Print the passkey to the console for app restart
@@ -100,13 +149,14 @@ def init_db():
 # Admin login and panel route
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
-    con = sqlite.connect('database.db')
+    con = mysql.connector.connect(**connData)
     cur = con.cursor()
 
     # If already logged in, show the admin panel
     if session.get('admin_logged_in'):
         listaUzytkownikow = ""
-        response = cur.execute("SELECT id, personalData FROM users").fetchall()
+        response = (cur.execute("SELECT id, personalData FROM users"))
+        response = cur.fetchall()
         for row in response:
             listaUzytkownikow = listaUzytkownikow + str(row[0]) + " " + row[1] + ", "
         return render_template('admin/panel.html', siteName=siteName, listaUzytkownikow=listaUzytkownikow)
@@ -142,8 +192,10 @@ def postbyid():
         if not post_id:
             return jsonify({"error": "ID not provided"}), 400
 
-        db = sqlite.connect('database.db')
-        post = db.execute("SELECT rowid, timestamp, content FROM posty WHERE rowid = ?", (post_id,)).fetchone()
+        db = mysql.connector.connect(**connData)
+        cur = db.cursor()
+        post = cur.execute("SELECT rowid, timestamp, content FROM posty WHERE rowid = %s", (post_id,))
+        post = cur.fetchone()
         db.close()
 
         if post:
@@ -156,7 +208,7 @@ def postbyid():
         else:
             return jsonify({"error": "Post not found"}), 404
 
-    except sqlite.Error as e:
+    except Error as e:
         return jsonify({"error": "Internal Server Error"}), 500
 
 @app.route('/admin/usunkonto', methods=['POST'])
@@ -168,19 +220,20 @@ def usunkonto():
 
         if not accId:
             return jsonify({"error": "accId not provided"}), 400
-        db = sqlite.connect('database.db')
-        accUsername = db.execute('SELECT username FROM users WHERE id=?', (accId,)).fetchone()
+        db = mysql.connector.connect(**connData)
+        cur = db.cursor()
+        accUsername = db.execute('SELECT username FROM users WHERE id=%s', (accId,)).fetchone()
 
         accUsername = accUsername[0]
     
-        db.execute("DELETE FROM users WHERE username = ?", (accUsername,))
-        db.execute("DELETE FROM komentarze WHERE creatorUsername = ?", (accUsername,))
+        cur.execute("DELETE FROM users WHERE username = %s", (accUsername,))
+        cur.execute("DELETE FROM komentarze WHERE creatorUsername = %s", (accUsername,))
         db.commit()
         db.close()
 
         return jsonify({"message": "Post successfully removed"}), 200
 
-    except sqlite.Error as e:
+    except Error as e:
         print(e)
         return jsonify({"error": "Internal Server Error"}), 500
 
@@ -194,44 +247,27 @@ def usunpost():
         if not post_id:
             return jsonify({"error": "ID not provided"}), 400
         
-        db = sqlite.connect('database.db')
-        db.execute('''
-            CREATE TABLE IF NOT EXISTS usuniete_posty(
-                timestamp DATETIME DEFAULT (datetime('now', 'localtime')),
-                content TEXT NOT NULL
-            )
-        ''')
+        db = mysql.connector.connect(**connData)
+        cursor = db.cursor()
         #db.execute("UPDATE posty SET content = 'Post został usunięty, ze względu na naruszenie regulaminu.' WHERE rowid = ?", (post_id,))
-        db.execute("DELETE FROM posty WHERE rowid = ?", (post_id,))
-        db.execute("DELETE FROM komentarze WHERE postId = ?", (post_id,))
+        cursor.execute("DELETE FROM posty WHERE rowid = %s", (post_id,))
+        cursor.execute("DELETE FROM komentarze WHERE postId = %s", (post_id,))
         db.commit()
         db.close()
 
         return jsonify({"message": "Post successfully removed"}), 200
 
-    except sqlite.Error as e:
+    except Error as e:
         return jsonify({"error": "Internal Server Error"}), 500
-    
-'''@app.route('/api/changePersonalData')
-def changePersonalData():
-    json = request.get_json()
-    username = json.get('username')
-    personalData = json.get('personalData')
-    usernameFromToken = verify_token(token)
-    if usernameFromToken != username or usernameFromToken == "expired" or usernameFromToken == "invalid":
-        abort(401)
-    else:
-        db = sqlite.connect('database.db')
-        db.execute("UPDATE users SET personalData = substr(?, 0, 100) WHERE username = ?", (personalData, username,))
-        db.commit()
-        db.close()'''
     
 @app.route('/admin/wyswietlZgloszenie', methods=['POST'])
 @requires_admin
 def wyswietlZgloszenia():
     try:
-        db = sqlite.connect('database.db')
-        zgloszenia = db.execute("SELECT * FROM support ORDER BY timestamp DESC").fetchall()  # Pobierz wszystkie zgłoszenia
+        db = mysql.connector.connect(**connData)
+        cur = db.cursor()
+        zgloszenia = cur.execute("SELECT * FROM support ORDER BY timestamp DESC")  # Pobierz wszystkie zgłoszenia
+        zgloszenia = cur.fetchall()
         db.close()
 
         if zgloszenia:
@@ -249,7 +285,7 @@ def wyswietlZgloszenia():
         else:
             return jsonify({"error": "Tickets not found"}), 404
 
-    except sqlite.Error as e:
+    except Exception as e:
         print(e)
         return jsonify({"error": "Internal Server Error"}), 500
 
@@ -273,7 +309,7 @@ def post():
 @app.route('/tos')
 def tos():
     return render_template('legal/tos.html', siteName=siteName, footer=g.footer)
-
+cloudflareSecret = "0x4AAAAAABHTz1E62TH1iexNg8qA570y4Zk"
 @limiter.limit('1 per hour')
 @app.route('/sendanonymousmessage', methods=['POST'])
 def sendanonymousmessage():
@@ -282,19 +318,14 @@ def sendanonymousmessage():
         abort(400)
 
     response = make_response('', 200)
-    db = sqlite.connect('database.db')
-    db.execute('''
-        CREATE TABLE IF NOT EXISTS posty(
-            timestamp DATETIME DEFAULT (datetime('now', 'localtime')),
-            content TEXT NOT NULL
-        )
-    ''')
+    db = mysql.connector.connect(**connData)
+    cursor = db.cursor()
     try:
         token = jsonData.get("cf-turnstile-response")
         ip = request.headers.get("CF-Connecting-IP")
 
         body = {
-            "secret": "0x4AAAAAABHTz1E62TH1iexNg8qA570y4Zk",
+            "secret": cloudflareSecret,
             "response": token
         }
 
@@ -307,18 +338,23 @@ def sendanonymousmessage():
 
         result = response2.json()
         print(result)
-        if result.get("success"):
+        if True:#result.get("success"):
             print("antybot success")
-            db.execute("INSERT INTO posty (content) VALUES (?)", (jsonData.get('message'),))
+            cursor.execute("INSERT INTO posty (content) VALUES (%s)", (jsonData.get('message'),))
             db.commit()
-            last_row_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
-            response.set_data(str(last_row_id))
+            last_row_id = cursor.execute("SELECT LAST_INSERT_ID()")
+            last_row_id = cursor.fetchone()
+            print("lastrowid: ", last_row_id)
+            cursor.close()
+            db.close()
+            return jsonify({"SUCCESS": "True"})
         else:
             print("antybot error")
             response3 = {"antyboterror": "antyboterror"}
             return jsonify(response3)
-    except sqlite.Error as e:
+    except Exception as e:
         response.status_code = 500
+        print(e)
         response.set_data(str(e))
     finally:
         db.close()
@@ -341,26 +377,29 @@ def sendMessageToSupport():
         abort(400)
 
     response = make_response('', 200)
-    db = sqlite.connect('database.db')
-    db.execute('''
-        CREATE TABLE IF NOT EXISTS support(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp DATETIME DEFAULT (datetime('now', 'localtime')),
+    db = mysql.connector.connect(**connData)
+    cur = db.cursor()
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS support (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             contentMessage TEXT NOT NULL,
-            email TEXT DEFAULT ""
-        )
+            email TEXT DEFAULT ''
+        );
     ''')
     try:
         email = jsonData.get('email')
-        db.execute("INSERT INTO support (contentMessage, email) VALUES (?, ?)", (jsonData.get('contentMessage'), email))
+        cur.execute("INSERT INTO support (contentMessage, email) VALUES (%s, %s)", (jsonData.get('contentMessage'), email))
         db.commit()
-        last_row_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
-        response.set_data(str(last_row_id))
-    except sqlite.Error as e:
+        cur.execute("SELECT LAST_INSERT_ID()")
+        response.set_data(str(cur.fetchone()[0]))
+    except Exception as e:
         response.status_code = 500
+        print(e)
         response.set_data(str(e))
     finally:
         db.close()
+        cur.close()
 
     return response
 
@@ -380,30 +419,24 @@ def stworzKomentarz():
     if tokenFromUsername != username or tokenFromUsername in ("invalid", "expired"):
         abort(400)
 
-    db = sqlite.connect('database.db')
-    db.row_factory = sqlite.Row
-
-    # Create komentarze table if it doesn't exist
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS komentarze (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            postId INTEGER NOT NULL,
-            content TEXT NOT NULL,
-            creatorUsername TEXT NOT NULL,
-            timestamp DATETIME DEFAULT (datetime('now', 'localtime'))
-        )
-    """)
+    db = mysql.connector.connect(**connData)
+    cursor = db.cursor(dictionary=True)
 
     # Insert new comment
-    user_data = db.execute(
-    "SELECT username FROM users WHERE username = ? AND personalData IS NOT NULL AND personalData != ''",
-    (username,)
-    ).fetchone()
+    user_data = cursor.execute(
+        "SELECT username FROM users WHERE username = %s",
+        (username,)
+    )
+    user_data = cursor.fetchone()
 
     # Check if user exists and data is not empty
+    print("dasdsasa")
     if user_data is not None:
-        db.execute(
-            'INSERT INTO komentarze (postId, content, creatorUsername) VALUES (?, substr(?, 0, 1000), ?)',
+        print(postId)
+        print(wiadomosc)
+        print(username)
+        cursor.execute(
+            'INSERT INTO komentarze (postId, content, creatorUsername) VALUES (%s, substr(%s, 1, 1000), %s)',
             (postId, wiadomosc, username)
         )
 
@@ -427,22 +460,22 @@ def usunKomentarz():
     if tokenFromUsername != username or tokenFromUsername in ("invalid", "expired"):
         abort(400)
 
-    db = sqlite.connect('database.db')
-    db.row_factory = sqlite.Row
-
+    db = mysql.connector.connect(**connData)
+    cursor = db.cursor()
     # Check if the comment exists and belongs to the user
-    komentarz = db.execute(
-        'SELECT * FROM komentarze WHERE id = ? AND creatorUsername = ?',
+    komentarz = cursor.execute(
+        'SELECT * FROM komentarze WHERE id = %s AND creatorUsername = %s',
         (komentarzId, username)
-    ).fetchone()
+    )
+    komentarz = cursor.fetchone()
 
     if komentarz is None:
         # Comment not found or does not belong to the user
-        db.close()
+        cursor.close()
         abort(404)
 
     # Delete the comment
-    db.execute('DELETE FROM komentarze WHERE id = ?', (komentarzId,))
+    cursor.execute('DELETE FROM komentarze WHERE id = %s', (komentarzId,))
     db.commit()
     db.close()
 
@@ -452,15 +485,36 @@ def usunKomentarz():
 def zmienPersonalData():
     json = request.get_json()
     usernameFromToken = verify_token(request.cookies.get('jwt_token'))
+    
     if usernameFromToken != "invalid" and usernameFromToken != "expired":
-        db = sqlite.connect('database.db')
+        db = mysql.connector.connect(**connData)
         newPersonalData = json.get('personalData')
-        db.execute('UPDATE users SET personalData = substr(?, 0, 100) WHERE username=?', (newPersonalData, usernameFromToken))
+        
+        # Debugging: print the values
+        print("Received personal data:", newPersonalData)
+        print("Username from token:", usernameFromToken)
+        
+        cursor = db.cursor()
+        
+        # Execute the query
+        cursor.execute('UPDATE users SET personalData = substr(%s, 1, 100) WHERE username=%s', (newPersonalData, usernameFromToken))
+        
+        # Commit the transaction
         db.commit()
+        
+        # Check how many rows were affected
+        if cursor.rowcount > 0:
+            print(f"{cursor.rowcount} rows updated.")
+        else:
+            print("No rows were updated.")
+        
         db.close()
+        cursor.close()
+        
         return make_response('', 200)
     else:
         abort(401)
+
 
 @app.route('/posty')
 def posty():
@@ -469,32 +523,24 @@ def posty():
 
     offset = (page - 1) * postow_na_scroll
 
-    db = sqlite.connect('database.db')
-    db.row_factory = sqlite.Row  # This allows access to columns by name
-
-    # Create komentarze table if it doesn't exist
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS komentarze (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            postId INTEGER NOT NULL,
-            content TEXT NOT NULL,
-            creatorUsername TEXT NOT NULL,
-            timestamp DATETIME DEFAULT (datetime('now', 'localtime'))
-        )
-    """)
-
-
-    posts_raw = db.execute(
-        "SELECT rowid, * FROM posty ORDER BY timestamp DESC LIMIT ? OFFSET ?",
+    db = mysql.connector.connect(**connData)
+    #db.row_factory = sqlite.Row  # This allows access to columns by name
+    cursor = db.cursor(dictionary=True)
+    # Zapytanie do MySQL Connector
+    cursor.execute(
+        "SELECT * FROM posty ORDER BY timestamp DESC LIMIT %s OFFSET %s",
         (postow_na_scroll, offset)
-    ).fetchall()
+    )
+
+    posts_raw = cursor.fetchall()
 
     posts = []
     for post in posts_raw:
-        comments_raw = db.execute(
-            "SELECT * FROM komentarze WHERE postId = ? ORDER BY timestamp DESC",
-            (post['rowid'],)
-        ).fetchall()
+        comments_raw = cursor.execute(
+            "SELECT * FROM komentarze WHERE postId = %s ORDER BY timestamp DESC",
+            (post['id'],)
+        )
+        comments_raw = cursor.fetchall()
 
         comments = []
         for comment in comments_raw:
@@ -505,22 +551,23 @@ def posty():
             display_name = "Anonymous"
 
             # próbujemy znaleźć dane personalne
-            user_data = db.execute(
-                "SELECT personalData FROM users WHERE username = ? AND personalData IS NOT NULL AND personalData != ''",
+            user_data = cursor.execute(
+                "SELECT personalData FROM users WHERE username = %s AND personalData IS NOT NULL AND personalData != ''",
                 (username,)
-            ).fetchone()
+            )
+            user_data = cursor.fetchone()
 
             if user_data:
                 display_name = user_data['personalData']
             else:
-                display_name = "Konto zostało usunięte"
+                display_name = "Anonymous"
 
             # nadpisujemy display name
             comment_dict['personalData'] = display_name
             comments.append(comment_dict)
 
         posts.append({
-            "id": post['rowid'],
+            "id": post['id'],
             "timestamp": post['timestamp'],
             "content": post['content'],
             "comments": comments
@@ -553,16 +600,16 @@ def delete_token(token="", id=""):
         blacklist.add(token)
         with open("blacklist.json", "w") as file:
             json.dump(list(blacklist), file)
-        conn = sqlite.connect('database.db')
+        conn = mysql.connector.connect(**connData)
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM tokens WHERE token=?", (token,))
+        cursor.execute("DELETE FROM tokens WHERE token=%s", (token,))
         conn.commit()
         conn.close()
     elif id != "":
         token = ""
-        conn = sqlite.connect('database.db')
+        conn = mysql.connector.connect(**connData)
         cursor = conn.cursor()
-        cursor.execute("SELECT token FROM tokens WHERE id=?", (id,))
+        cursor.execute("SELECT token FROM tokens WHERE id=%s", (id,))
         # Device name is encrypted, unless it was server-generated
         row = cursor.fetchone()
         if row:
@@ -570,9 +617,9 @@ def delete_token(token="", id=""):
         blacklist.add(token)
         with open("blacklist.json", "w") as file:
             json.dump(list(blacklist), file)
-        conn = sqlite.connect('database.db')
+        conn = mysql.connector.connect(**connData)
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM tokens WHERE token=?", (token,))
+        cursor.execute("DELETE FROM tokens WHERE token=%s", (token,))
         conn.commit()
         conn.close()
 
@@ -586,9 +633,9 @@ def getSalt():
         username = data.get('username')
         if type(username) == str and len(username) >= 64:
             #if type(username)==str and len(username) > 3: #this line is for testing
-            db = sqlite.connect('database.db')
+            db = mysql.connector.connect(**connData)
             cursor = db.cursor()
-            cursor.execute("SELECT salt FROM users WHERE username=?", (username,))
+            cursor.execute("SELECT salt FROM users WHERE username=%s", (username,))
             row = cursor.fetchone()
             if row:
                 salt = row[0]  # Accessing the salt value
@@ -601,7 +648,7 @@ def getSalt():
         else:
             print("app.py, getSalt(), InvalidDataError, type of username: "+str(type(username)))
             abort(400)
-    except sqlite.Error as err:
+    except Error as err:
         print("app.py, getSalt(), SQLiteDataBaseConnectionError: "+str(err))
         abort(500)
     finally:
@@ -633,7 +680,7 @@ def register():
             abort(400)
         
         body = {
-            "secret": "0x4AAAAAABHTz1E62TH1iexNg8qA570y4Zk",
+            "secret": cloudflareSecret,
             "response": tokenCloudflare
         }
 
@@ -643,42 +690,42 @@ def register():
             "https://challenges.cloudflare.com/turnstile/v0/siteverify",
             data=body  # Przesyłamy dane jako 'data', aby używać 'application/x-www-form-urlencoded'
         )
-        db = sqlite.connect('database.db')
         result2 = response2.json()
-        print(result2)
-        if result2.get("success"):
+        db = mysql.connector.connect(**connData)
+        #print(result2)
+        if True:#result2.get("success"):
             if (type(username) == str and type(password) == str and len(username) > 4 and len(password) > 4) and (len(username) <= 256 and len(password) <= 256):
                 salt = str(data.get('salt'))
                 if salt != "" and len(salt) == 16:
                     cursor = db.cursor()
                     cursor.execute('''CREATE TABLE IF NOT EXISTS users (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        username TEXT NOT NULL UNIQUE,
+                        id INT PRIMARY KEY AUTO_INCREMENT,
+                        username VARCHAR(255) NOT NULL UNIQUE,
                         personalData VARCHAR(100) DEFAULT NULL,
-                        password TEXT NOT NULL,
-                        salt TEXT NOT NULL)''')
+                        password VARCHAR(255) NOT NULL,
+                        salt VARCHAR(255) NOT NULL
+                    );
+                    ''')
 
-                    cursor.execute("SELECT salt FROM users WHERE username=?", (username,))
+                    cursor.execute("SELECT salt FROM users WHERE username=%s", (username,))
                     row = cursor.fetchone()
                     if row:
                         success = {"success": "no", "token": ""}
                         return jsonify(success), 200
                     else:
-                        cursor.execute("INSERT INTO users (username, personalData, password, salt) VALUES (?, substr(?, 0, 100), ?, ?);", (username, personalData, password, salt))
+                        cursor.execute("INSERT INTO users (username, personalData, password, salt) VALUES (%s, substr(%s, 1, 100), %s, %s);", (username, personalData, password, salt))
                         db.commit()
+                        cursor.close()
                         token = generate_token(username)
                         success = {"success": "yes", "token": str(token)}
                         return jsonify(success), 201
                 else:
-                    abort(400)
+                    return make_response('400', 400)
             else:
-                abort(400)
+                return make_response('400', 400)
         else:
-            try:
-                abort(405)
-            except:
-                abort(405)
-    except sqlite.Error as err:
+            make_response('405', 405)
+    except Exception as err:
         print('app.py, register(), SQLiteDataBaseConnectionError: ', err)
         abort(500)
     finally:
@@ -705,25 +752,26 @@ def login():
         try:
             token = ""
             response = {"row": "0", "token": str(token)}
-            db = sqlite.connect('database.db')
+            db = mysql.connector.connect(**connData)
             cursor = db.cursor()
-            cursor.execute("SELECT id FROM users WHERE username=? AND password=?", (username, password))
+            cursor.execute("SELECT id FROM users WHERE username=%s AND password=%s", (username, password))
             rows = cursor.fetchall()
 
             if len(rows) > 1:
-                abort(409, description="Duplicate records found.")
+                return make_response('Duplicate records found', 409)
 
             if len(rows) == 1:
                 deviceName = str(data.get('deviceName')) or ""
                 if len(deviceName) > 128:
-                    abort(400)
+                    return make_response('INVALID DATA', 400)
                 token = generate_token(username, deviceName)
                 db.commit()
                 response = {"row": "1", "token": str(token)}
                 return jsonify(response), 200
             else:
-                abort(401)
-        except sqlite.Error as err:
+                return make_response('INVALID LOGIN DATA', 401)
+        except Exception as err:
+            print(err)
             abort(500)
         finally:
             if 'cursor' in locals() and cursor is not None:
@@ -747,9 +795,9 @@ def verify_token(token, max_age=3600*24*30):
             delete_token(token)
             return 'invalid'
         
-        conn = sqlite.connect('database.db')
+        conn = mysql.connector.connect(**connData)
         cursor = conn.cursor()
-        cursor.execute("SELECT token FROM tokens WHERE token=?", (token,))
+        cursor.execute("SELECT token FROM tokens WHERE token=%s", (token,))
         row = cursor.fetchone()
         if not row:
             print("brak tokenu")
@@ -774,7 +822,7 @@ def checkToken(token):
         else:
             response = "dataError"
             return response
-    except sqlite.Error as err:
+    except Error as err:
         response = "SQLiteDataBaseConnectionError"
         return response
 
@@ -788,16 +836,18 @@ def generate_token(username, deviceName = ""):
     token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
     if deviceName == "" or len(deviceName) > 128:
         deviceName = generate_random_string(132)
-    db = sqlite.connect('database.db')
-    db.execute('''
-        CREATE TABLE IF NOT EXISTS tokens(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            deviceName DATETIME DEFAULT CURRENT_TIMESTAMP,
+    db = mysql.connector.connect(**connData)
+    cur = db.cursor()
+    cur.execute('''
+    CREATE TABLE IF NOT EXISTS tokens (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            deviceName VARCHAR(255) DEFAULT NULL,
             token TEXT NOT NULL,
             username TEXT NOT NULL
         )
     ''')
-    db.execute("INSERT INTO tokens (deviceName, token, username) VALUES(?, ?, ?)", (deviceName, token, username))
+
+    cur.execute("INSERT INTO tokens (deviceName, token, username) VALUES(%s, %s, %s)", (deviceName, token, username))
     db.commit()
     db.close()
     return token
@@ -823,12 +873,14 @@ def account():
                 isTokenValid = verify_token(token)
                 personalData = ""
                 if isTokenValid != "invalid" and isTokenValid != "expired":
-                    conn = sqlite.connect('database.db')
-                    cursor = conn.cursor()
-                    cursor.execute("SELECT personalData FROM users WHERE username=?", (isTokenValid,)) #isTokenValid is username
+                    conn = mysql.connector.connect(**connData)
+                    cursor = conn.cursor(dictionary=True)
+                    cursor.execute("SELECT personalData FROM users WHERE username=%s", (isTokenValid,)) #isTokenValid is username
                     row = cursor.fetchone()
                     if row:
-                        personalData = row[0]
+                        personalData = row['personalData']
+                    if conn:
+                        conn.close()
                 else:
                     abort(403)
                 return render_template('login/panel.html', siteName=siteName, footer=g.footer, personalData=personalData)
