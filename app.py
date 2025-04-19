@@ -193,17 +193,17 @@ def postbyid():
             return jsonify({"error": "ID not provided"}), 400
 
         db = mysql.connector.connect(**connData)
-        cur = db.cursor()
-        post = cur.execute("SELECT rowid, timestamp, content FROM posty WHERE rowid = %s", (post_id,))
+        cur = db.cursor(dictionary=True)
+        post = cur.execute("SELECT id, timestamp, content FROM posty WHERE id = %s", (post_id,))
         post = cur.fetchone()
         db.close()
 
         if post:
             # Ensure correct mapping from the query result
             return jsonify({
-                "id": post[0],  # post[0] is the rowid (post ID)
-                "timestamp": post[1],  # post[1] is the timestamp
-                "content": post[2]  # post[2] is the content
+                "id": post['rowid'],  # post[0] is the rowid (post ID)
+                "timestamp": post['timestamp'],  # post[1] is the timestamp
+                "content": post['content']  # post[2] is the content
             }), 200
         else:
             return jsonify({"error": "Post not found"}), 404
@@ -222,7 +222,8 @@ def usunkonto():
             return jsonify({"error": "accId not provided"}), 400
         db = mysql.connector.connect(**connData)
         cur = db.cursor()
-        accUsername = db.execute('SELECT username FROM users WHERE id=%s', (accId,)).fetchone()
+        accUsername = cur.execute('SELECT username FROM users WHERE id=%s', (accId,))
+        accUsername = cur.fetchone()
 
         accUsername = accUsername[0]
     
@@ -250,7 +251,7 @@ def usunpost():
         db = mysql.connector.connect(**connData)
         cursor = db.cursor()
         #db.execute("UPDATE posty SET content = 'Post został usunięty, ze względu na naruszenie regulaminu.' WHERE rowid = ?", (post_id,))
-        cursor.execute("DELETE FROM posty WHERE rowid = %s", (post_id,))
+        cursor.execute("DELETE FROM posty WHERE id = %s", (post_id,))
         cursor.execute("DELETE FROM komentarze WHERE postId = %s", (post_id,))
         db.commit()
         db.close()

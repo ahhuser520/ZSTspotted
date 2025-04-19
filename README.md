@@ -11,5 +11,6 @@ pip3 install flask-cors
 pip3 install python-dotenv
 pip3 install pyjwt
 pip3 install requests
+pip3 install mysql-connector-python
 python3 app.py
 ```
