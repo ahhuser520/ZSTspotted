@@ -18,19 +18,22 @@ import requests
 import mysql.connector
 from mysql.connector import Error
 
-connData = {
-    "host": "localhost",
-    "user": "ahhuser", #ahhuser
-    "password": "dsa@dsau89./../@ADSe1cv", #5aa84+ZU3_7ORGYFQI1MiELUw\pm;(>JayC7@Z,p=:6_M.dy]a/*<}dm2XYD{Wl?
-    "database": "zstspotted",
-    "charset": "utf8mb4",
-    "collation": "utf8mb4_general_ci"
-}
-
-
 app = Flask(__name__)
 
 load_dotenv()
+
+db_pass = os.getenv('DB_PASS')
+cloudflareSecret = os.getenv('cloudflareSecret')
+
+connData = {
+    'user': 'ahhuser',
+    'password': db_pass,
+    'host': 'localhost',
+    'port': 3306,
+    'database': 'zstspotted',
+    'charset': 'utf8mb4',
+    'collation': 'utf8mb4_general_ci',
+}
 
 from flask import Flask
 from flask_cors import CORS
@@ -50,7 +53,7 @@ def get_data():
     return {"message": "This is some data"}
 
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
-app.config['SECRET_KEY'] = '2dca86e594a1b6890e47e16a6a5978b0f0a584118254f2e7fd086a277ad46958'
+app.config['SECRET_KEY'] = app.secret_key
 
 # Ustawienie Limiter bez błędów w przekazywaniu key_func
 limiter = Limiter(get_remote_address, app=app)
@@ -308,7 +311,7 @@ def post():
 @app.route('/tos')
 def tos():
     return render_template('legal/tos.html', siteName=siteName, footer=g.footer)
-cloudflareSecret = "0x4AAAAAABHTz1E62TH1iexNg8qA570y4Zk"
+
 @limiter.limit('1 per hour')
 @app.route('/sendanonymousmessage', methods=['POST'])
 def sendanonymousmessage():
