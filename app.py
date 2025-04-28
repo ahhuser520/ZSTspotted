@@ -4,7 +4,7 @@ from flask_limiter.util import get_remote_address
 from flask_cors import CORS
 #import sqlite3 as sqlite
 import random
-from dotenv import load_dotenv
+from dotenv import load_dotenv, set_key
 import os
 from functools import wraps
 import secrets
@@ -24,11 +24,12 @@ load_dotenv()
 
 db_pass = os.getenv('DB_PASS')
 cloudflareSecret = os.getenv('cloudflareSecret')
+usernamedb = os.getenv('usernamedb')
 
 connData = {
-    'user': 'ahhuser',
+    'user': usernamedb,
     'password': db_pass,
-    'host': 'localhost',
+    'host': '192.168.1.104',
     'port': 3306,
     'database': 'zstspotted',
     'charset': 'utf8mb4',
@@ -52,8 +53,18 @@ CORS(app, resources={
 def get_data():
     return {"message": "This is some data"}
 
-app.secret_key = os.getenv('FLASK_SECRET_KEY')
+secret_key = os.getenv('FLASK_SECRET_KEY')
+
+def generate_secret_key():
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=64))
+
+if not secret_key:
+    secret_key = generate_secret_key()
+    set_key('.env', 'FLASK_SECRET_KEY', secret_key)
+
+app.secret_key = secret_key
 app.config['SECRET_KEY'] = app.secret_key
+
 
 # Ustawienie Limiter bez błędów w przekazywaniu key_func
 limiter = Limiter(get_remote_address, app=app)
