@@ -65,7 +65,6 @@ if not secret_key:
 app.secret_key = secret_key
 app.config['SECRET_KEY'] = app.secret_key
 
-
 # Ustawienie Limiter bez błędów w przekazywaniu key_func
 limiter = Limiter(get_remote_address, app=app)
 
