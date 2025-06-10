@@ -155,17 +155,37 @@ async function hash(data) {
 }
 
 async function hashPassword(pass, salt) {
-    console.log("Hashing password:", pass, "with salt:", salt);
+    console.log("Hashing password with PBKDF2:", pass, "with salt:", salt);
 
-    // Combine password and salt
-    const combined = new TextEncoder().encode(pass + salt);
+    // Encode password and salt to Uint8Array
+    const encoder = new TextEncoder();
+    const passwordKey = encoder.encode(pass);
+    const saltBytes = encoder.encode(salt);
 
-    // Generate SHA-512 hash
-    const hashBuffer = await crypto.subtle.digest('SHA-512', combined);
+    // Import the password as a key
+    const key = await crypto.subtle.importKey(
+        'raw',              // raw format of the key
+        passwordKey,        // the actual key
+        { name: 'PBKDF2' }, // algorithm
+        false,              // not extractable
+        ['deriveBits']      // usage
+    );
 
-    // Convert hash to hexadecimal string
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+    // Derive bits using PBKDF2
+    const derivedBits = await crypto.subtle.deriveBits(
+        {
+            name: 'PBKDF2',
+            salt: saltBytes,
+            iterations: 100000,          // number of iterations
+            hash: 'SHA-256'              // use SHA-256 inside PBKDF2
+        },
+        key,
+        512 // number of bits to derive (e.g., 512 bits = 64 bytes)
+    );
+
+    // Convert derived bits to hexadecimal string
+    const hashArray = Array.from(new Uint8Array(derivedBits));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
     return hashHex;
 }
